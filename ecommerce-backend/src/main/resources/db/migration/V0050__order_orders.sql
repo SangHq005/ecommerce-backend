@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS orders (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_code VARCHAR(32) NOT NULL,
+  user_id BIGINT NOT NULL,
+  status VARCHAR(32) NOT NULL, -- SUBMITTED/PAYMENT_PENDING/PAID/CANCELLED/FULFILLED
+  total_amount BIGINT NOT NULL DEFAULT 0,
+  currency VARCHAR(8) NOT NULL DEFAULT 'VND',
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uk_order_code (order_code),
+  KEY idx_order_user (user_id, created_at),
+  KEY idx_order_status (status),
+
+  CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES app_user(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
