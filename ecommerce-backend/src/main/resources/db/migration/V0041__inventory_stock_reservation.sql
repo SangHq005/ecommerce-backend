@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS stock_reservation (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_token VARCHAR(64) NOT NULL,
+  sku_id BIGINT NOT NULL,
+  qty INT NOT NULL,
+  status VARCHAR(16) NOT NULL, -- RESERVED/RELEASED/COMMITTED
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uk_reserve_order_sku (order_token, sku_id),
+  KEY idx_reserve_order (order_token),
+  CONSTRAINT fk_reserve_sku FOREIGN KEY (sku_id) REFERENCES product_sku(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
