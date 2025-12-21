@@ -1,0 +1,3 @@
+ALTER TABLE product
+  ADD COLUMN average_rating DECIMAL(2,1) NOT NULL DEFAULT 0.0,
+  ADD COLUMN review_count INT NOT NULL DEFAULT 0;
