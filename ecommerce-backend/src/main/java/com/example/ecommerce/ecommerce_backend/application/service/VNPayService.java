@@ -4,6 +4,7 @@ import com.example.ecommerce.ecommerce_backend.infrastructure.config.VNPayConfig
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
@@ -17,9 +18,10 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(name = "payment.vnpay.mock", havingValue = "false", matchIfMissing = true)
 public class VNPayService {
 
-    private final VNPayConfig vnPayConfig;
+    protected final VNPayConfig vnPayConfig;
 
     /**
      * Create payment URL for VNPay gateway

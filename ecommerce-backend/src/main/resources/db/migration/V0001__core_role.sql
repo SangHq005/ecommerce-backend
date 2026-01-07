@@ -5,13 +5,13 @@ CREATE TABLE IF NOT EXISTS role (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO role(code, name)
-SELECT * FROM (SELECT 'ADMIN','Administrator') AS x
+SELECT * FROM (SELECT 'ADMIN' as c,'Administrator' as n) AS x
 WHERE NOT EXISTS (SELECT 1 FROM role WHERE code='ADMIN');
 
 INSERT INTO role(code, name)
-SELECT * FROM (SELECT 'SELLER','Seller') AS x
+SELECT * FROM (SELECT 'SELLER' as c,'Seller' as n) AS x
 WHERE NOT EXISTS (SELECT 1 FROM role WHERE code='SELLER');
 
 INSERT INTO role(code, name)
-SELECT * FROM (SELECT 'CLIENT','Client') AS x
+SELECT * FROM (SELECT 'CLIENT' as c,'Client' as n) AS x
 WHERE NOT EXISTS (SELECT 1 FROM role WHERE code='CLIENT');

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS coupon (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
-    description TEXT NULL,
+    description LONGTEXT NULL,
     type VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL,
 
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS coupon_usage (
     used_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_coupon_usage_coupon FOREIGN KEY (coupon_id) REFERENCES coupon(id) ON DELETE CASCADE,
-    CONSTRAINT fk_coupon_usage_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    CONSTRAINT fk_coupon_usage_user FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE,
 
     INDEX idx_coupon_usage_coupon (coupon_id),
     INDEX idx_coupon_usage_user (user_id),

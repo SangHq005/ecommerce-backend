@@ -7,7 +7,7 @@ CREATE TABLE password_reset_tokens (
     used BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_password_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_password_reset_user FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE,
     INDEX idx_token (token),
     INDEX idx_expires_at (expires_at),
     INDEX idx_user_id (user_id)

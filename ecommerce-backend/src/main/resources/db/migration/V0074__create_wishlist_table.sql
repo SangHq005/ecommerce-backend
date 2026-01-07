@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS wishlist_item (
     added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     note VARCHAR(500) NULL,
 
-    CONSTRAINT fk_wishlist_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    CONSTRAINT fk_wishlist_user FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE,
     CONSTRAINT fk_wishlist_product FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE,
     CONSTRAINT uk_wishlist_user_product UNIQUE (user_id, product_id),
 

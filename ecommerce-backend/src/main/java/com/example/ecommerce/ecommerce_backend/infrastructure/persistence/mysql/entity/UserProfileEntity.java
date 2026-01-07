@@ -22,6 +22,7 @@ public class UserProfileEntity {
     @Column(length = 32)
     private String phone;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "gender")
     Gender gender;
 
