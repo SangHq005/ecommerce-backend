@@ -16,6 +16,7 @@ public class ApiException extends RuntimeException {
     public static ApiException badRequest(String msg) { return new ApiException(400, "BAD_REQUEST", msg); }
     public static ApiException notFound(String msg) { return new ApiException(404, "NOT_FOUND", msg); }
     public static ApiException conflict(String msg) { return new ApiException(409, "CONFLICT", msg); }
+    public static ApiException insufficientStock(String msg) { return new ApiException(409, "INSUFFICIENT_STOCK", msg); }
     public static ApiException unauthorized(String msg) { return new ApiException(401, "UNAUTHORIZED", msg); }
     public static ApiException forbidden(String msg) { return new ApiException(403, "FORBIDDEN", msg); }
     public static ApiException internalError(String msg) { return new ApiException(500, "INTERNAL_ERROR", msg); }

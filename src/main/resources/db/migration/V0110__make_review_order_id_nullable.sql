@@ -1,0 +1,1 @@
+ALTER TABLE review MODIFY order_id BIGINT NULL;

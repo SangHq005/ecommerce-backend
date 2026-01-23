@@ -2,8 +2,8 @@ package com.example.ecommerce.ecommerce_backend.application.service;
 
 import com.example.ecommerce.ecommerce_backend.api.dto.upload.UploadResponse;
 import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,11 +11,15 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class ImageUploadService {
 
+    private static final Logger log = LoggerFactory.getLogger(ImageUploadService.class);
+
     private final CloudStorageService cloudStorageService;
+
+    public ImageUploadService(CloudStorageService cloudStorageService) {
+        this.cloudStorageService = cloudStorageService;
+    }
 
     private static final List<String> ALLOWED_IMAGE_TYPES = Arrays.asList(
             "image/jpeg",
@@ -90,6 +94,24 @@ public class ImageUploadService {
         validateImageFile(file);
 
         String fileUrl = cloudStorageService.uploadFile(file, "categories");
+
+        return new UploadResponse(
+                file.getOriginalFilename(),
+                fileUrl,
+                file.getContentType(),
+                file.getSize()
+        );
+    }
+
+    /**
+     * Upload review image
+     */
+    public UploadResponse uploadReviewImage(MultipartFile file) {
+        log.info("Uploading review image: {}", file.getOriginalFilename());
+
+        validateImageFile(file);
+
+        String fileUrl = cloudStorageService.uploadFile(file, "reviews");
 
         return new UploadResponse(
                 file.getOriginalFilename(),

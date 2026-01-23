@@ -12,5 +12,8 @@ public record ProductSearchHit(
         long maxPrice,
         String thumbnailUrl,
         Instant createdAt,
-        Double score
+        Double score,
+        String shopCity,
+        Double averageRating,
+        Integer discount
 ) {}

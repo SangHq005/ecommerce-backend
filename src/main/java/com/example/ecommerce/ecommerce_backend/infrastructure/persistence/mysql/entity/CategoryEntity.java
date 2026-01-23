@@ -1,10 +1,12 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
 @Table(name = "category")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class CategoryEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,6 +1,7 @@
 package com.example.ecommerce.ecommerce_backend.api.config;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -13,9 +14,10 @@ import java.nio.file.Paths;
  * Web MVC Configuration for serving static resources
  * Configures resource handlers for uploaded files and static assets
  */
-@Slf4j
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    private static final Logger log = LoggerFactory.getLogger(WebMvcConfig.class);
 
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;

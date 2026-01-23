@@ -11,14 +11,10 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "user_profile")
 public class UserProfileEntity {
-    @Setter
-    @Getter
     @Id
     @Column(name = "user_id")
     private Long userId;
 
-    @Setter
-    @Getter
     @Column(length = 32)
     private String phone;
 
@@ -26,13 +22,9 @@ public class UserProfileEntity {
     @Column(name = "gender")
     Gender gender;
 
-    @Setter
-    @Getter
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Setter
-    @Getter
     @Column(name = "avatar_url", length = 512)
     private String avatarUrl;
 
@@ -42,11 +34,43 @@ public class UserProfileEntity {
     @Version
     private long version;
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
     public void setGender(Gender gender) {
         this.gender = gender;
     }
 
     public Gender getGender() {
         return gender;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

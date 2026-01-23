@@ -1,16 +1,18 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.debug;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
 @Profile("debug")
 public class ConfigSourcesDebugRunner implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(ConfigSourcesDebugRunner.class);
 
     private final ConfigurableEnvironment env;
 

@@ -9,5 +9,6 @@ public record SkuRequest(
         long price,
         Long compareAtPrice,
         int stockOnHand,
-        boolean active
+        boolean active,
+        String imageUrl
 ) {}

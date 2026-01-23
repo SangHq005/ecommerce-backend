@@ -8,5 +8,13 @@ public class PasswordHasher {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public String hash(String raw) { return encoder.encode(raw); }
-    public boolean matches(String raw, String hashed) { return encoder.matches(raw, hashed); }
+    public boolean matches(String raw, String hashed) {
+        if (hashed == null) {
+            return false;
+        }
+        if (!hashed.startsWith("$2") && hashed.equals(raw)) {
+            return true;
+        }
+        return encoder.matches(raw, hashed);
+    }
 }

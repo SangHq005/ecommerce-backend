@@ -36,6 +36,7 @@ A robust, scalable, and feature-rich e-commerce backend platform built with mode
 - **Email System**: Transactional emails for order confirmation and password resets.
 - **Notification Center**: In-app notifications for order status updates.
 - **VNPAY Integration**: Ready-to-use payment gateway integration for the Vietnamese market.
+- **MoMo Integration**: E-wallet payment support including QR code and app redirect.
 
 ---
 

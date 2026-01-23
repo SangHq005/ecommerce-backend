@@ -5,10 +5,10 @@ import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.WishlistItemEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductJpaRepository;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductSkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.WishlistItemJpaRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,14 +16,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class WishlistService {
+
+    private static final Logger log = LoggerFactory.getLogger(WishlistService.class);
 
     private final WishlistItemJpaRepository wishlistRepo;
     private final ProductJpaRepository productRepo;
-    private final ProductSkuJpaRepository skuRepo;
+    private final SkuJpaRepository skuRepo;
     private final RecommendationService recommendationService;
+
+    public WishlistService(
+            WishlistItemJpaRepository wishlistRepo,
+            ProductJpaRepository productRepo,
+            SkuJpaRepository skuRepo,
+            RecommendationService recommendationService
+    ) {
+        this.wishlistRepo = wishlistRepo;
+        this.productRepo = productRepo;
+        this.skuRepo = skuRepo;
+        this.recommendationService = recommendationService;
+    }
 
     /**
      * Add product to user's wishlist

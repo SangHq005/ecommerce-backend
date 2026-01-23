@@ -22,10 +22,18 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationEnt
     long countByUserIdAndIsRead(Long userId, Boolean isRead);
 
     @Modifying
-    @Query("UPDATE NotificationEntity n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.userId = ?1 AND n.isRead = false")
+    @Query("UPDATE NotificationEntity n SET n.isRead = true, n.readAt = cast(CURRENT_TIMESTAMP as Instant) WHERE n.userId = ?1 AND n.isRead = false")
     void markAllAsRead(Long userId);
 
     @Modifying
-    @Query("UPDATE NotificationEntity n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.id = ?1")
+    @Query("UPDATE NotificationEntity n SET n.isRead = true, n.readAt = cast(CURRENT_TIMESTAMP as Instant) WHERE n.id = ?1")
     void markAsRead(Long notificationId);
+
+    @Modifying
+    @Query("DELETE FROM NotificationEntity n WHERE n.isRead = true AND n.createdAt < ?1")
+    int deleteOldReadNotifications(java.time.LocalDateTime cutoffDate);
+
+    @Modifying
+    @Query("DELETE FROM NotificationEntity n WHERE n.isRead = false AND n.createdAt < ?1")
+    int deleteOldUnreadNotifications(java.time.LocalDateTime cutoffDate);
 }

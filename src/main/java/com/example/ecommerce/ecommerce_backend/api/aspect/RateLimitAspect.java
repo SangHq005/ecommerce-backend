@@ -1,14 +1,14 @@
 package com.example.ecommerce.ecommerce_backend.api.aspect;
 
-import com.example.ecommerce.ecommerce_backend.api.annotation.RateLimit;
-import com.example.ecommerce.ecommerce_backend.application.service.RateLimitService;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Map;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,23 +17,43 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.time.Duration;
-import java.util.Map;
+import com.example.ecommerce.ecommerce_backend.api.annotation.RateLimit;
+import com.example.ecommerce.ecommerce_backend.application.service.RateLimitService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Aspect for handling @RateLimit annotation
  * Automatically applies rate limiting to annotated controller methods
+ * Note: Rate limiting is disabled in the "test" profile
  */
-@Slf4j
 @Aspect
 @Component
-@RequiredArgsConstructor
 public class RateLimitAspect {
 
+    private static final Logger log = LoggerFactory.getLogger(RateLimitAspect.class);
+
     private final RateLimitService rateLimitService;
+    private final boolean rateLimitEnabled;
+
+    public RateLimitAspect(RateLimitService rateLimitService, Environment environment) {
+        this.rateLimitService = rateLimitService;
+        // Disable rate limiting in test profile
+        this.rateLimitEnabled = !Arrays.asList(environment.getActiveProfiles()).contains("test");
+        if (!rateLimitEnabled) {
+            log.info("Rate limiting is DISABLED for test profile");
+        }
+    }
 
     @Around("@annotation(rateLimit)")
     public Object checkRateLimit(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
+        // Skip rate limiting if disabled (e.g., in test profile)
+        if (!rateLimitEnabled) {
+            return joinPoint.proceed();
+        }
+
         // Build rate limit key
         String key = buildRateLimitKey(joinPoint, rateLimit);
 

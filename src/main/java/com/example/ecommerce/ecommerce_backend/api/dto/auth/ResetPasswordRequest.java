@@ -1,5 +1,6 @@
 package com.example.ecommerce.ecommerce_backend.api.dto.auth;
 
+import com.example.ecommerce.ecommerce_backend.api.validation.StrongPassword;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -8,7 +9,8 @@ public record ResetPasswordRequest(
         String token,
 
         @NotBlank(message = "New password is required")
-        @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
+        @Size(max = 100, message = "Password must not exceed 100 characters")
+        @StrongPassword
         String newPassword
 ) {
 }

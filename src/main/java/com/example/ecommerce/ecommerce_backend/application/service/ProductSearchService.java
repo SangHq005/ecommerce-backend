@@ -34,20 +34,21 @@ public class ProductSearchService {
     public PageResponse<ProductSearchHit> search(
             String q, Long categoryId, Long brandId, Long shopId,
             Long minPrice, Long maxPrice, Boolean inStock,
+            String locations, Integer minRating,
             String sort, int page, int size
     ) {
         String ver = redis.opsForValue().get("cache:catalog:ver");
         if (ver == null) ver = "0";
 
         String fingerprint = hash(ver + "|" + q + "|" + categoryId + "|" + brandId + "|" + shopId + "|" +
-                minPrice + "|" + maxPrice + "|" + inStock + "|" + sort + "|" + page + "|" + size);
+                minPrice + "|" + maxPrice + "|" + inStock + "|" + locations + "|" + minRating + "|" + sort + "|" + page + "|" + size);
 
         String key = "cache:search:ver:" + ver + ":" + fingerprint;
 
         var cached = cache.get(key, new com.fasterxml.jackson.core.type.TypeReference<PageResponse<ProductSearchHit>>() {});
         if (cached.isPresent()) return cached.get();
 
-        Page<ProductSearchHit> p = searchRepo.searchActiveProducts(q, categoryId, brandId, shopId, minPrice, maxPrice, inStock, sort, page, size);
+        Page<ProductSearchHit> p = searchRepo.searchActiveProducts(q, categoryId, brandId, shopId, minPrice, maxPrice, inStock, locations, minRating, sort, page, size);
 
         PageResponse<ProductSearchHit> resp = new PageResponse<>(p.getContent(), p.getNumber(), p.getSize(), p.getTotalElements());
         cache.set(key, resp, Duration.ofSeconds(45));
@@ -61,7 +62,7 @@ public class ProductSearchService {
                     null,
                     Map.of(
                             "q", q,
-                            "filters", Map.of("categoryId", categoryId, "brandId", brandId, "shopId", shopId, "minPrice", minPrice, "maxPrice", maxPrice, "inStock", inStock),
+                            "filters", Map.of("categoryId", categoryId, "brandId", brandId, "shopId", shopId, "minPrice", minPrice, "maxPrice", maxPrice, "inStock", inStock, "locations", locations != null ? locations : "ALL", "minRating", minRating != null ? minRating : 0),
                             "sort", sort,
                             "page", page,
                             "size", size,

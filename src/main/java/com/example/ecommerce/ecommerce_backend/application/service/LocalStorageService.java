@@ -2,8 +2,8 @@ package com.example.ecommerce.ecommerce_backend.application.service;
 
 import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
 import com.example.ecommerce.ecommerce_backend.infrastructure.config.CloudStorageConfig;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,12 +16,16 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 @ConditionalOnProperty(name = "cloud.storage.provider", havingValue = "local", matchIfMissing = true)
 public class LocalStorageService implements CloudStorageService {
 
+    private static final Logger log = LoggerFactory.getLogger(LocalStorageService.class);
+
     private final CloudStorageConfig config;
+
+    public LocalStorageService(CloudStorageConfig config) {
+        this.config = config;
+    }
 
     @Override
     public String uploadFile(MultipartFile file, String folder) {
@@ -52,7 +56,7 @@ public class LocalStorageService implements CloudStorageService {
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // Return relative URL
-            String fileUrl = "/" + config.getUploadDir() + "/" + folder + "/" + fileName;
+            String fileUrl = "/files/" + folder + "/" + fileName;
             log.info("File uploaded successfully: {}", fileUrl);
 
             return fileUrl;

@@ -9,10 +9,16 @@ public record ReviewResponse(
         Long id,
         Long productId,
         Long userId,
+        String userName,
+        String userAvatar,
         Long orderId,
         Integer rating,
         String comment,
         List<String> images,
         ReviewStatus status,
+        Integer helpfulCount,
+        List<ReviewResponse> replies,
+        Boolean isLiked,
+        Boolean isAdmin,
         Instant createdAt
 ) {}

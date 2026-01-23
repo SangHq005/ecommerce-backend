@@ -1,19 +1,33 @@
 package com.example.ecommerce.ecommerce_backend.api.controller;
 
-import com.example.ecommerce.ecommerce_backend.api.dto.profile.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.ecommerce.ecommerce_backend.api.dto.profile.ProfileResponse;
 import com.example.ecommerce.ecommerce_backend.api.dto.profile.UpdateProfileRequest;
+import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
+import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
 import com.example.ecommerce.ecommerce_backend.application.service.LocalFileStorageService;
 import com.example.ecommerce.ecommerce_backend.application.service.ProfileService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserProfileEntity;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/users/me")
+@PreAuthorize("hasRole('CLIENT')")
+@Tag(name = "User Profile", description = "User profile management")
 public class UserProfileController {
 
     private final ProfileService profileService;
@@ -25,29 +39,38 @@ public class UserProfileController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ProfileResponse> get(Authentication auth) {
+    @Operation(summary = "Get profile", description = "Get current user's profile")
+    public ResponseEntity<ApiResponse<ProfileResponse>> get(Authentication auth) {
         Long userId = Long.valueOf(auth.getName());
         UserProfileEntity p = profileService.getProfile(userId).orElseGet(() -> {
             UserProfileEntity np = new UserProfileEntity();
             np.setUserId(userId);
             return np;
         });
-        return ResponseEntity.ok(toResponse(p));
+        return ResponseHelper.ok(toResponse(p));
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<ProfileResponse> update(Authentication auth, @Valid @RequestBody UpdateProfileRequest req) {
+    @Operation(summary = "Update profile", description = "Update current user's profile")
+    public ResponseEntity<ApiResponse<ProfileResponse>> update(
+            Authentication auth,
+            @Valid @RequestBody UpdateProfileRequest req
+    ) {
         Long userId = Long.valueOf(auth.getName());
         UserProfileEntity p = profileService.upsertProfile(userId, req.phone(), req.gender(), req.dateOfBirth());
-        return ResponseEntity.ok(toResponse(p));
+        return ResponseHelper.ok(toResponse(p), "Profile updated successfully");
     }
 
     @PostMapping(value = "/avatar", consumes = "multipart/form-data")
-    public ResponseEntity<ProfileResponse> uploadAvatar(Authentication auth, @RequestPart("file") MultipartFile file) {
+    @Operation(summary = "Upload avatar", description = "Upload user avatar image")
+    public ResponseEntity<ApiResponse<ProfileResponse>> uploadAvatar(
+            Authentication auth,
+            @RequestPart("file") MultipartFile file
+    ) {
         Long userId = Long.valueOf(auth.getName());
         String url = storage.save("avatars", file);
         UserProfileEntity p = profileService.updateAvatar(userId, url);
-        return ResponseEntity.ok(toResponse(p));
+        return ResponseHelper.ok(toResponse(p), "Avatar uploaded successfully");
     }
 
     private ProfileResponse toResponse(UserProfileEntity p) {

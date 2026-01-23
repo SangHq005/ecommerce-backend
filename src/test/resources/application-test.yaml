@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:ecommerce;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
+  
+  flyway:
+    enabled: false # Disable flyway for H2 in basic tests
+
+  data:
+    redis:
+      repositories:
+        enabled: false # Disable redis repositories for tests by default unless needed
+
+  mongodb:
+    uri: mongodb://localhost:27017/ecommerce_test
+    embedded:
+      version: 4.0.2
+
+logging:
+  level:
+    root: WARN
+    "[com.example.ecommerce]": INFO
+    "[org.springframework]": WARN
+    "[org.hibernate.SQL]": WARN
+
+app:
+  security:
+    jwt:
+      secret-base64: "dGhpcy1pcy1hLXZlcnktc2VjcmV0LWFuZC1sb25nLWtleS1mb3ItdGVzdGluZy1wdXJwb3Nlcw=="
+  order:
+    default-shipping-fee: 30000
+    currency: VND

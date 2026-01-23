@@ -2,7 +2,8 @@ package com.example.ecommerce.ecommerce_backend.application.service;
 
 import com.example.ecommerce.ecommerce_backend.infrastructure.config.VNPayConfig;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderEntity;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -20,9 +21,10 @@ import java.util.Map;
  * - No real VNPay API calls
  */
 @Service
-@Slf4j
 @ConditionalOnProperty(name = "payment.vnpay.mock", havingValue = "true")
 public class MockVNPayService extends VNPayService {
+
+    private static final Logger log = LoggerFactory.getLogger(MockVNPayService.class);
 
     public MockVNPayService(VNPayConfig vnPayConfig) {
         super(vnPayConfig);

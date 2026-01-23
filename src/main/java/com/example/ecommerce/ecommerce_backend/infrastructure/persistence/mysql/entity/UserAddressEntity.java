@@ -36,6 +36,9 @@ public class UserAddressEntity {
     @Column(name = "postal_code", length = 32)
     private String postalCode;
 
+    @Column(name = "address_type", length = 32)
+    private String addressType;
+
     @Column(name = "is_default", nullable = false)
     private boolean isDefault;
 
@@ -49,6 +52,7 @@ public class UserAddressEntity {
     private long version;
 
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public String getReceiverName() { return receiverName; }
@@ -67,6 +71,8 @@ public class UserAddressEntity {
     public void setProvince(String province) { this.province = province; }
     public String getPostalCode() { return postalCode; }
     public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+    public String getAddressType() { return addressType; }
+    public void setAddressType(String addressType) { this.addressType = addressType; }
     public boolean isDefault() { return isDefault; }
     public void setDefault(boolean aDefault) { isDefault = aDefault; }
 }

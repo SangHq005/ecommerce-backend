@@ -1,21 +1,26 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.debug;
 
 import com.mongodb.client.MongoClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
 @Profile("debug")
-@RequiredArgsConstructor
 public class MongoHealthDebugRunner implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(MongoHealthDebugRunner.class);
 
     private final Environment env;
     private final MongoClient mongoClient;
+
+    public MongoHealthDebugRunner(Environment env, MongoClient mongoClient) {
+        this.env = env;
+        this.mongoClient = mongoClient;
+    }
 
     @Override
     public void run(String... args) {

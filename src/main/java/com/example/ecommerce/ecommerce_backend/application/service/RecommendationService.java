@@ -8,8 +8,10 @@ import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.OrderItemJpaRepository;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductJpaRepository;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductSkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -19,21 +21,22 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class RecommendationService {
+
+    private static final Logger log = LoggerFactory.getLogger(RecommendationService.class);
 
     private final UserEventMongoRepository eventRepo;
     private final ProductJpaRepository productRepo;
     private final UserCategoryAffinityMongoRepository affinityRepo;
     private final OrderItemJpaRepository orderItemRepo;
-    private final ProductSkuJpaRepository skuRepo;
+    private final SkuJpaRepository skuRepo;
 
     public RecommendationService(
             UserEventMongoRepository eventRepo,
             ProductJpaRepository productRepo,
             UserCategoryAffinityMongoRepository affinityRepo,
             OrderItemJpaRepository orderItemRepo,
-            ProductSkuJpaRepository skuRepo
+            SkuJpaRepository skuRepo
     ) {
         this.eventRepo = eventRepo;
         this.productRepo = productRepo;

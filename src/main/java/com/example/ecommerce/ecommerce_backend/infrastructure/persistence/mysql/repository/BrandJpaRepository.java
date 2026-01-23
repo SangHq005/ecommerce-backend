@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface BrandJpaRepository extends JpaRepository<BrandEntity, Long> {
     List<BrandEntity> findByActiveTrueOrderByIdAsc();
+    boolean existsBySlug(String slug);
 }

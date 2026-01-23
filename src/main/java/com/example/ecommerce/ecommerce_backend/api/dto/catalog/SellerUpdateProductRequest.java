@@ -5,5 +5,8 @@ public record SellerUpdateProductRequest(
         Long brandId,
         String name,
         String description,
-        String mainImageUrl
+        String mainImageUrl,
+        Long price,
+        Long originalPrice,
+        Integer stockQuantity
 ) {}

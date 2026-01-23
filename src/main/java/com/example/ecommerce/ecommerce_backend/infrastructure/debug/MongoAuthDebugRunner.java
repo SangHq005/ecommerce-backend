@@ -1,22 +1,26 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.debug;
 
 import com.mongodb.client.MongoClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-@Slf4j
 @Component
 @Profile("debug")
-@RequiredArgsConstructor
 public class MongoAuthDebugRunner implements CommandLineRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(MongoAuthDebugRunner.class);
+
     private final MongoClient mongoClient;
+
+    public MongoAuthDebugRunner(MongoClient mongoClient) {
+        this.mongoClient = mongoClient;
+    }
 
     @Override
     public void run(String... args) {

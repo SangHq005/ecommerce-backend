@@ -3,9 +3,11 @@ package com.example.ecommerce.ecommerce_backend.application.service;
 import com.example.ecommerce.ecommerce_backend.api.dto.notification.NotificationResponse;
 import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.NotificationEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.NotificationJpaRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.UserJpaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -16,12 +18,23 @@ import java.time.Instant;
 import java.util.List;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class NotificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationJpaRepository notificationRepo;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserJpaRepository userRepo;
+
+    public NotificationService(
+            NotificationJpaRepository notificationRepo,
+            SimpMessagingTemplate messagingTemplate,
+            UserJpaRepository userRepo
+    ) {
+        this.notificationRepo = notificationRepo;
+        this.messagingTemplate = messagingTemplate;
+        this.userRepo = userRepo;
+    }
 
     /**
      * Create notification for user
@@ -203,5 +216,118 @@ public class NotificationService {
                 "REVIEW",
                 reviewId
         );
+    }
+
+    /**
+     * Notify all admins about new seller profile submission
+     */
+    @Transactional
+    public void notifyAdminsNewSellerProfile(Long profileId, String sellerName, String sellerType) {
+        try {
+            List<UserEntity> admins = userRepo.findAllAdmins();
+            log.info("Notifying {} admins about new seller profile {}", admins.size(), profileId);
+            
+            String message = String.format("Hồ sơ người bán mới từ %s (%s) đang chờ xác thực", 
+                    sellerName, sellerType.equals("INDIVIDUAL") ? "Cá nhân" : "Doanh nghiệp");
+            
+            for (UserEntity admin : admins) {
+                try {
+                    createNotification(
+                            admin.getId(),
+                            "SELLER_PROFILE_PENDING",
+                            "Hồ sơ người bán mới",
+                            message,
+                            "SELLER_PROFILE",
+                            profileId
+                    );
+                } catch (Exception e) {
+                    log.warn("Failed to notify admin {}: {}", admin.getId(), e.getMessage());
+                }
+            }
+            
+            log.info("Successfully notified admins about seller profile {}", profileId);
+        } catch (Exception e) {
+            log.error("Failed to notify admins about seller profile {}: {}", profileId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Notify all admins about new shop submission
+     */
+    @Transactional
+    public void notifyAdminsNewShop(Long shopId, String shopName, Long sellerUserId) {
+        try {
+            List<UserEntity> admins = userRepo.findAllAdmins();
+            log.info("Notifying {} admins about new shop submission {}", admins.size(), shopId);
+            
+            String message = String.format("Shop mới '%s' đang chờ duyệt", shopName);
+            
+            for (UserEntity admin : admins) {
+                try {
+                    createNotification(
+                            admin.getId(),
+                            "SHOP_PENDING",
+                            "Shop mới chờ duyệt",
+                            message,
+                            "SHOP",
+                            shopId
+                    );
+                } catch (Exception e) {
+                    log.warn("Failed to notify admin {}: {}", admin.getId(), e.getMessage());
+                }
+            }
+            
+            log.info("Successfully notified admins about shop {}", shopId);
+        } catch (Exception e) {
+            log.error("Failed to notify admins about shop {}: {}", shopId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Notify all admins about new product submission
+     */
+    @Transactional
+    public void notifyAdminsNewProduct(Long productId, String productName, Long shopId) {
+        try {
+            List<UserEntity> admins = userRepo.findAllAdmins();
+            
+            if (admins.isEmpty()) {
+                log.warn("No active admins found in database! Product {} will not be notified to any admin.", productId);
+                log.warn("Please ensure at least one user has ADMIN role and ACTIVE status.");
+                return;
+            }
+            
+            log.info("Notifying {} admins about new product submission: productId={}, name={}, shopId={}", 
+                    admins.size(), productId, productName, shopId);
+            
+            String message = String.format("Sản phẩm mới '%s' đang chờ duyệt", productName);
+            int successCount = 0;
+            
+            for (UserEntity admin : admins) {
+                try {
+                    createNotification(
+                            admin.getId(),
+                            "PRODUCT_PENDING",
+                            "Sản phẩm mới chờ duyệt",
+                            message,
+                            "PRODUCT",
+                            productId
+                    );
+                    successCount++;
+                    log.debug("Notification sent to admin {} for product {}", admin.getId(), productId);
+                } catch (Exception e) {
+                    log.warn("Failed to notify admin {}: {}", admin.getId(), e.getMessage(), e);
+                }
+            }
+            
+            if (successCount > 0) {
+                log.info("Successfully notified {}/{} admins about product {}", successCount, admins.size(), productId);
+            } else {
+                log.error("Failed to notify any admin about product {} ({} admins found but all notifications failed)", 
+                        productId, admins.size());
+            }
+        } catch (Exception e) {
+            log.error("Failed to notify admins about product {}: {}", productId, e.getMessage(), e);
+        }
     }
 }

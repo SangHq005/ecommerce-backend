@@ -3,12 +3,13 @@ package com.example.ecommerce.ecommerce_backend.application.service;
 import com.example.ecommerce.ecommerce_backend.api.dto.cart.AddToCartRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.cart.CartResponse;
 import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
+import com.example.ecommerce.ecommerce_backend.api.exception.InsufficientStockException;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CartItemEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductSkuEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SkuEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.CartItemJpaRepository;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductJpaRepository;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductSkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SellerShopJpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +23,11 @@ import java.util.stream.Collectors;
 public class CartService {
 
     private final CartItemJpaRepository cartRepo;
-    private final ProductSkuJpaRepository skuRepo;
+    private final SkuJpaRepository skuRepo;
     private final ProductJpaRepository productRepo;
     private final SellerShopJpaRepository shopRepo;
 
-    public CartService(CartItemJpaRepository cartRepo, ProductSkuJpaRepository skuRepo, ProductJpaRepository productRepo, SellerShopJpaRepository shopRepo) {
+    public CartService(CartItemJpaRepository cartRepo, SkuJpaRepository skuRepo, ProductJpaRepository productRepo, SellerShopJpaRepository shopRepo) {
         this.cartRepo = cartRepo;
         this.skuRepo = skuRepo;
         this.productRepo = productRepo;
@@ -35,7 +36,7 @@ public class CartService {
 
     @Transactional
     public void addToCart(Long userId, AddToCartRequest req) {
-        ProductSkuEntity sku = skuRepo.findById(req.skuId())
+        SkuEntity sku = skuRepo.findById(req.skuId())
                 .orElseThrow(() -> ApiException.notFound("SKU not found"));
         
         ProductEntity product = productRepo.findById(sku.getProductId())
@@ -63,6 +64,80 @@ public class CartService {
             item.setShopId(product.getShopId());
             item.setQuantity(req.quantity());
             cartRepo.save(item);
+        }
+    }
+
+    /**
+     * Add item to cart with enhanced validation and stock reservation
+     * Requirements: 7.2, 7.3, 7.4
+     * 
+     * @param userId The user ID
+     * @param req The add to cart request
+     * @return The cart item ID
+     * @throws ApiException if SKU not found or inactive
+     * @throws InsufficientStockException if stock unavailable
+     */
+    @Transactional
+    public Long addItem(Long userId, AddToCartRequest req) {
+        // Validate SKU exists and is active
+        SkuEntity sku = skuRepo.findById(req.skuId())
+                .orElseThrow(() -> ApiException.notFound("SKU not found"));
+        
+        if (!sku.isActive()) {
+            throw ApiException.badRequest("SKU is not active");
+        }
+        
+        // Calculate available stock
+        int availableStock = sku.getStockOnHand() - sku.getReservedStock();
+        
+        // Check if we have an existing cart item for this SKU
+        CartItemEntity item = cartRepo.findByUserIdAndSkuId(userId, req.skuId())
+                .orElse(null);
+        
+        int requestedQuantity = req.quantity();
+        int newTotalQuantity = requestedQuantity;
+        
+        if (item != null) {
+            // Update existing cart item
+            newTotalQuantity = item.getQuantity() + requestedQuantity;
+            
+            // Check available stock >= requested quantity
+            if (newTotalQuantity > availableStock) {
+                throw new InsufficientStockException(req.skuId(), newTotalQuantity, availableStock);
+            }
+            
+            item.setQuantity(newTotalQuantity);
+            cartRepo.save(item);
+            
+            // Reserve stock for the additional quantity
+            sku.setReservedStock(sku.getReservedStock() + requestedQuantity);
+            skuRepo.save(sku);
+            
+            return item.getId();
+        } else {
+            // Create new cart item
+            
+            // Check available stock >= requested quantity
+            if (requestedQuantity > availableStock) {
+                throw new InsufficientStockException(req.skuId(), requestedQuantity, availableStock);
+            }
+            
+            ProductEntity product = productRepo.findById(sku.getProductId())
+                    .orElseThrow(() -> ApiException.notFound("Product not found"));
+            
+            item = new CartItemEntity();
+            item.setUserId(userId);
+            item.setSkuId(req.skuId());
+            item.setProductId(product.getId());
+            item.setShopId(product.getShopId());
+            item.setQuantity(requestedQuantity);
+            CartItemEntity savedItem = cartRepo.save(item);
+            
+            // Reserve stock for cart item
+            sku.setReservedStock(sku.getReservedStock() + requestedQuantity);
+            skuRepo.save(sku);
+            
+            return savedItem.getId();
         }
     }
 
@@ -100,7 +175,7 @@ public class CartService {
                     p.getId(),
                     p.getName(),
                     sku.getId(),
-                    "Standard", // Variant name logic omitted
+                    sku.getOptionSignature(),
                     p.getMainImageUrl(),
                     sku.getPrice(),
                     i.getQuantity(),
@@ -127,7 +202,7 @@ public class CartService {
         
         if (!item.getUserId().equals(userId)) throw ApiException.notFound("Item not found"); // security
 
-        ProductSkuEntity sku = skuRepo.findById(item.getSkuId())
+        SkuEntity sku = skuRepo.findById(item.getSkuId())
                 .orElseThrow(() -> ApiException.notFound("SKU not found"));
         
         if (quantity > (sku.getStockOnHand() - sku.getReservedStock())) {

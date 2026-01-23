@@ -1,9 +1,10 @@
 package com.example.ecommerce.ecommerce_backend.api.config;
 
-import com.example.ecommerce.ecommerce_backend.api.filter.JwtAuthFilter;
-import com.example.ecommerce.ecommerce_backend.api.security.OAuth2SuccessHandler;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,11 +15,21 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import com.example.ecommerce.ecommerce_backend.api.filter.JwtAuthFilter;
+import com.example.ecommerce.ecommerce_backend.api.security.OAuth2SuccessHandler;
+import com.example.ecommerce.ecommerce_backend.infrastructure.config.CorsProperties;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private final CorsProperties corsProperties;
+    private final Environment environment;
+
+    public SecurityConfig(CorsProperties corsProperties, Environment environment) {
+        this.corsProperties = corsProperties;
+        this.environment = environment;
+    }
 
     @Bean
     SecurityFilterChain filterChain(
@@ -50,15 +61,24 @@ public class SecurityConfig {
                 .requestMatchers("/health", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
                 // Public endpoints - Authentication
-                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/trusted-login").permitAll()
+                .requestMatchers("/api/v1/auth/otp/**").permitAll()
                 .requestMatchers("/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
-                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**", "/oauth2/authorization/**").permitAll()
 
                 // Public endpoints - Catalog & Products (Read-only)
                 .requestMatchers(HttpMethod.GET, "/api/v1/catalog/public/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/products/search").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/brands/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/recommendations/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/vouchers/shop/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/products/*/reviews").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/compare/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll() // Product detail with variants
+
+                // Public endpoints - AI Assistant (Public access for all users)
+                .requestMatchers("/api/v1/ai-assistant/**").permitAll()
 
                 // Public endpoints - Payment callbacks
                 .requestMatchers("/api/v1/payment/*/callback", "/api/v1/payment/vnpay/callback").permitAll()
@@ -66,8 +86,11 @@ public class SecurityConfig {
                 // Public endpoints - Static files
                 .requestMatchers("/uploads/**").permitAll()
 
-                // Debug endpoints (should be removed in production)
-                .requestMatchers(HttpMethod.GET, "/api/v1/_debug/ping").permitAll()
+                // Debug endpoints - only available in dev profile
+                .requestMatchers(HttpMethod.GET, "/api/v1/_debug/**").access((authentication, ctx) -> {
+                    boolean isDev = Arrays.asList(environment.getActiveProfiles()).contains("dev");
+                    return new org.springframework.security.authorization.AuthorizationDecision(isDev);
+                })
 
                 // Admin endpoints - require ADMIN role
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
@@ -86,43 +109,20 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS configuration to allow frontend applications to access the API
-     * Customize allowed origins based on your deployment environment
+     * CORS configuration to allow frontend applications to access the API.
+     * Configuration is externalized via CorsProperties (app.cors.* properties).
      */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow requests from frontend applications
-        // TODO: Update these URLs based on your actual frontend deployment
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",      // React/Next.js development
-                "http://localhost:4200",      // Angular development
-                "http://localhost:5173",      // Vite development
-                "http://localhost:8081"       // Alternative frontend port
-                // Add production frontend URLs here
-        ));
-
-        // Allow common HTTP methods
-        configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
-
-        // Allow all headers (you can restrict this in production)
-        configuration.setAllowedHeaders(List.of("*"));
-
-        // Allow credentials (cookies, authorization headers, etc.)
-        configuration.setAllowCredentials(true);
-
-        // Cache preflight response for 1 hour
-        configuration.setMaxAge(3600L);
-
-        // Expose headers that frontend can access
-        configuration.setExposedHeaders(List.of(
-                "Authorization",
-                "X-Correlation-ID",
-                "X-Total-Count"
-        ));
+        // Use externalized configuration
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        configuration.setAllowedMethods(corsProperties.getAllowedMethods());
+        configuration.setAllowedHeaders(corsProperties.getAllowedHeaders());
+        configuration.setAllowCredentials(corsProperties.isAllowCredentials());
+        configuration.setMaxAge(corsProperties.getMaxAge());
+        configuration.setExposedHeaders(corsProperties.getExposedHeaders());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

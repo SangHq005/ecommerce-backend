@@ -6,8 +6,8 @@ import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserEntity;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -20,13 +20,23 @@ import java.util.Locale;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class EmailServiceImpl implements EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailConfig emailConfig;
+
+    public EmailServiceImpl(
+            JavaMailSender mailSender,
+            TemplateEngine templateEngine,
+            EmailConfig emailConfig
+    ) {
+        this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+        this.emailConfig = emailConfig;
+    }
 
     @Override
     @Async("emailTaskExecutor")
@@ -124,6 +134,14 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process("email/" + templateName, context);
 
             helper.setText(htmlContent, true);
+
+            // Detailed terminal log for development
+            System.out.println("\n-------------------------------------------------");
+            System.out.println(">>> SENDING EMAIL TO: " + to);
+            System.out.println(">>> SUBJECT: " + subject);
+            System.out.println(">>> TEMPLATE: " + templateName);
+            System.out.println(">>> VARIABLES: " + variables);
+            System.out.println("-------------------------------------------------\n");
 
             mailSender.send(message);
             log.info("Email sent successfully to: {} with template: {}", to, templateName);

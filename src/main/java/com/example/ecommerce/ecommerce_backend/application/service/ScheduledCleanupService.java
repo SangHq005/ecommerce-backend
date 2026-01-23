@@ -1,36 +1,68 @@
 package com.example.ecommerce.ecommerce_backend.application.service;
 
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RefreshSessionEntity;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RefreshTokenEntity;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.StockReservationEntity;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.PasswordResetTokenJpaRepository;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RefreshSessionJpaRepository;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RefreshTokenJpaRepository;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.StockReservationJpaRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RefreshSessionEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RefreshTokenEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SkuEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.StockReservationEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.PasswordResetTokenJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RefreshSessionJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RefreshTokenJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.StockReservationJpaRepository;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RefreshSessionEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RefreshTokenEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SkuEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.StockReservationEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.PasswordResetTokenJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RefreshSessionJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RefreshTokenJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.StockReservationJpaRepository;
+
 /**
  * Scheduled cleanup service for removing expired/old data
  * Runs periodic jobs to maintain database health and performance
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class ScheduledCleanupService {
+
+    private static final Logger log = LoggerFactory.getLogger(ScheduledCleanupService.class);
 
     private final PasswordResetTokenJpaRepository passwordResetTokenRepository;
     private final RefreshTokenJpaRepository refreshTokenRepository;
     private final RefreshSessionJpaRepository refreshSessionRepository;
     private final StockReservationJpaRepository stockReservationRepository;
+    private final SkuJpaRepository skuRepository;
+
+    public ScheduledCleanupService(
+            PasswordResetTokenJpaRepository passwordResetTokenRepository,
+            RefreshTokenJpaRepository refreshTokenRepository,
+            RefreshSessionJpaRepository refreshSessionRepository,
+            StockReservationJpaRepository stockReservationRepository,
+            SkuJpaRepository skuRepository
+    ) {
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.refreshSessionRepository = refreshSessionRepository;
+        this.stockReservationRepository = stockReservationRepository;
+        this.skuRepository = skuRepository;
+    }
 
     /**
      * Cleanup expired password reset tokens
@@ -123,8 +155,16 @@ public class ScheduledCleanupService {
                     stockReservationRepository.findExpiredReservations(now);
 
             if (!expiredReservations.isEmpty()) {
-                // Release each reservation
+                // Release each reservation and decrement SKU reserved_stock
                 for (StockReservationEntity reservation : expiredReservations) {
+                    // Decrement reserved_stock on the SKU
+                    SkuEntity sku = skuRepository.findByIdForUpdate(reservation.getSkuId())
+                            .orElse(null);
+                    if (sku != null) {
+                        sku.setReservedStock(Math.max(0, sku.getReservedStock() - reservation.getQty()));
+                        skuRepository.save(sku);
+                    }
+
                     reservation.setStatus("RELEASED");
                     stockReservationRepository.save(reservation);
                 }

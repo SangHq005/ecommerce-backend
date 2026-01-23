@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 @Entity
-@Getter
-@Setter
 @Table(name = "payments")
 public class PaymentEntity {
     @Id
@@ -52,6 +50,36 @@ public class PaymentEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getOrderId() { return orderId; }
+    public void setOrderId(Long orderId) { this.orderId = orderId; }
+
+    public Long getAmount() { return amount; }
+    public void setAmount(Long amount) { this.amount = amount; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public PaymentMethod getMethod() { return method; }
+    public void setMethod(PaymentMethod method) { this.method = method; }
+
+    public PaymentStatus getStatus() { return status; }
+    public void setStatus(PaymentStatus status) { this.status = status; }
+
+    public String getTransactionId() { return transactionId; }
+    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+
+    public String getGateway() { return gateway; }
+    public void setGateway(String gateway) { this.gateway = gateway; }
+
+    public Map<String, Object> getGatewayResponse() { return gatewayResponse; }
+    public void setGatewayResponse(Map<String, Object> gatewayResponse) { this.gatewayResponse = gatewayResponse; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     @PrePersist
     void prePersist() {

@@ -8,8 +8,11 @@ import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CouponUsageEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.CouponJpaRepository;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.CouponUsageJpaRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,12 +20,17 @@ import java.time.Instant;
 import java.util.List;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class CouponService {
+
+    private static final Logger log = LoggerFactory.getLogger(CouponService.class);
 
     private final CouponJpaRepository couponRepo;
     private final CouponUsageJpaRepository usageRepo;
+
+    public CouponService(CouponJpaRepository couponRepo, CouponUsageJpaRepository usageRepo) {
+        this.couponRepo = couponRepo;
+        this.usageRepo = usageRepo;
+    }
 
     /**
      * Validate coupon and calculate discount
@@ -192,7 +200,7 @@ public class CouponService {
     ) {
         log.info("Finding best auto-apply coupon for user {} with order total {}", userId, orderTotal);
 
-        List<CouponEntity> autoApplyCoupons = couponRepo.findAutoApplyCoupons(Instant.now());
+        List<CouponEntity> autoApplyCoupons = couponRepo.findAutoApplyCoupons(CouponStatus.ACTIVE);
 
         CouponEntity bestCoupon = null;
         Long maxDiscount = 0L;
@@ -226,7 +234,7 @@ public class CouponService {
      */
     @Transactional(readOnly = true)
     public List<CouponEntity> getActiveCoupons() {
-        return couponRepo.findActiveValidCoupons(Instant.now());
+        return couponRepo.findActiveValidCoupons(CouponStatus.ACTIVE);
     }
 
     /**
@@ -294,9 +302,12 @@ public class CouponService {
             throw ApiException.badRequest("Cannot change code of a coupon that has been used");
         }
 
+        existing.setCode(updates.getCode().toUpperCase());
         existing.setName(updates.getName());
         existing.setDescription(updates.getDescription());
-        existing.setStatus(updates.getStatus());
+        existing.setType(updates.getType());
+        existing.setDiscountValue(updates.getDiscountValue());
+        existing.setMaxDiscountAmount(updates.getMaxDiscountAmount());
         existing.setMinOrderAmount(updates.getMinOrderAmount());
         existing.setStartDate(updates.getStartDate());
         existing.setEndDate(updates.getEndDate());
@@ -306,6 +317,9 @@ public class CouponService {
         existing.setApplicableProductIds(updates.getApplicableProductIds());
         existing.setApplicableCategoryIds(updates.getApplicableCategoryIds());
         existing.setApplicableUserIds(updates.getApplicableUserIds());
+        if (updates.getStatus() != null) {
+            existing.setStatus(updates.getStatus());
+        }
 
         CouponEntity saved = couponRepo.save(existing);
         log.info("Coupon updated successfully: {}", saved.getCode());
@@ -329,5 +343,36 @@ public class CouponService {
 
         couponRepo.delete(coupon);
         log.info("Coupon deleted successfully");
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CouponEntity> adminSearch(CouponStatus status, Boolean autoApply, String q, Pageable pageable) {
+        Specification<CouponEntity> spec = (root, query, cb) -> {
+            var predicates = cb.conjunction();
+            if (status != null) {
+                predicates.getExpressions().add(cb.equal(root.get("status"), status));
+            }
+            if (autoApply != null) {
+                predicates.getExpressions().add(cb.equal(root.get("autoApply"), autoApply));
+            }
+            if (q != null && !q.isBlank()) {
+                String like = "%" + q.trim().toLowerCase() + "%";
+                predicates.getExpressions().add(cb.or(
+                        cb.like(cb.lower(root.get("code")), like),
+                        cb.like(cb.lower(root.get("name")), like)
+                ));
+            }
+            return predicates;
+        };
+
+        return couponRepo.findAll(spec, pageable);
+    }
+
+    @Transactional
+    public CouponEntity updateStatus(Long couponId, CouponStatus status) {
+        CouponEntity coupon = couponRepo.findById(couponId)
+                .orElseThrow(() -> ApiException.notFound("Coupon not found"));
+        coupon.setStatus(status);
+        return couponRepo.save(coupon);
     }
 }

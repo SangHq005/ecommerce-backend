@@ -40,7 +40,7 @@ Write-Host "Starting Spring Boot application..." -ForegroundColor Green
 Write-Host ""
 
 # Run Maven with environment variables
-& mvn spring-boot:run
+& .\mvnw.cmd spring-boot:run
 
 # Check exit code
 if ($LASTEXITCODE -ne 0) {

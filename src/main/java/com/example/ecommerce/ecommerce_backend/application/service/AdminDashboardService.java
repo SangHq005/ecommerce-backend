@@ -5,12 +5,20 @@ import com.example.ecommerce.ecommerce_backend.api.dto.admin.SalesAnalyticsRespo
 import com.example.ecommerce.ecommerce_backend.api.dto.admin.UserAnalyticsResponse;
 import com.example.ecommerce.ecommerce_backend.domain.order.OrderStatus;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderEntity;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderItemEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CategoryEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RoleEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserEntity;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.CategoryJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.OrderItemJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.OrderJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RoleJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SellerShopJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.UserJpaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,15 +32,40 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class AdminDashboardService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminDashboardService.class);
+
+    private static final int LOW_STOCK_THRESHOLD = 5;
 
     private final UserJpaRepository userRepo;
     private final OrderJpaRepository orderRepo;
     private final OrderItemJpaRepository orderItemRepo;
     private final ProductJpaRepository productRepo;
-    private final ProductSkuJpaRepository skuRepo;
+    private final SkuJpaRepository skuRepo;
+    private final CategoryJpaRepository categoryRepo;
+    private final SellerShopJpaRepository shopRepo;
+    private final RoleJpaRepository roleRepo;
+
+    public AdminDashboardService(
+            UserJpaRepository userRepo,
+            OrderJpaRepository orderRepo,
+            OrderItemJpaRepository orderItemRepo,
+            ProductJpaRepository productRepo,
+            SkuJpaRepository skuRepo,
+            CategoryJpaRepository categoryRepo,
+            SellerShopJpaRepository shopRepo,
+            RoleJpaRepository roleRepo
+    ) {
+        this.userRepo = userRepo;
+        this.orderRepo = orderRepo;
+        this.orderItemRepo = orderItemRepo;
+        this.productRepo = productRepo;
+        this.skuRepo = skuRepo;
+        this.categoryRepo = categoryRepo;
+        this.shopRepo = shopRepo;
+        this.roleRepo = roleRepo;
+    }
 
     /**
      * Get comprehensive dashboard statistics
@@ -42,99 +75,86 @@ public class AdminDashboardService {
         log.info("Generating admin dashboard statistics");
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfToday = now.withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime startOfToday = now.toLocalDate().atStartOfDay();
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
         LocalDateTime startOfLast30Days = now.minusDays(30);
 
-        Instant instantNow = Instant.now();
         Instant instantStartOfToday = startOfToday.atZone(ZoneId.systemDefault()).toInstant();
         Instant instantStartOfMonth = startOfMonth.atZone(ZoneId.systemDefault()).toInstant();
-        Instant instant7DaysAgo = instantNow.minus(7, ChronoUnit.DAYS);
-        Instant instant30DaysAgo = instantNow.minus(30, ChronoUnit.DAYS);
+
+        List<String> completedStatuses = List.of(
+                OrderStatus.COMPLETED.name(),
+                OrderStatus.DELIVERED.name()
+        );
+        List<String> processingStatuses = List.of(
+                OrderStatus.PROCESSING.name(),
+                OrderStatus.READY_TO_SHIP.name()
+        );
 
         // User Statistics
         long totalUsers = userRepo.count();
-        long newUsersToday = userRepo.findAll().stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(instantStartOfToday))
-                .count();
-        long newUsersThisMonth = userRepo.findAll().stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(instantStartOfMonth))
-                .count();
-        long activeUsers = totalUsers; // Simplified: all users are active
+        long newUsersToday = userRepo.countByCreatedAtAfter(instantStartOfToday);
+        long newUsersThisMonth = userRepo.countByCreatedAtAfter(instantStartOfMonth);
+        long activeUsers = userRepo.countByStatus("ACTIVE");
 
         // Order Statistics
-        List<OrderEntity> allOrders = orderRepo.findAll();
-        long totalOrders = allOrders.size();
-        long ordersToday = allOrders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfToday))
-                .count();
-        long ordersThisMonth = allOrders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfMonth))
-                .count();
-        long pendingOrders = allOrders.stream()
-                .filter(o -> OrderStatus.PAID.name().equals(o.getStatus()))
-                .count();
-        long processingOrders = allOrders.stream()
-                .filter(o -> OrderStatus.PROCESSING.name().equals(o.getStatus()) ||
-                        OrderStatus.READY_TO_SHIP.name().equals(o.getStatus()))
-                .count();
-        long completedOrders = allOrders.stream()
-                .filter(o -> OrderStatus.COMPLETED.name().equals(o.getStatus()) ||
-                        OrderStatus.DELIVERED.name().equals(o.getStatus()))
-                .count();
+        long totalOrders = orderRepo.count();
+        long ordersToday = orderRepo.countByCreatedAtAfter(startOfToday);
+        long ordersThisMonth = orderRepo.countByCreatedAtAfter(startOfMonth);
+        long pendingOrders = orderRepo.countByStatus(OrderStatus.PAID.name());
+        long processingOrders = orderRepo.countByStatusIn(processingStatuses);
+        long completedOrders = orderRepo.countByStatusIn(completedStatuses);
 
         // Revenue Statistics
-        List<OrderEntity> completedOrdersList = allOrders.stream()
-                .filter(o -> OrderStatus.COMPLETED.name().equals(o.getStatus()) ||
-                        OrderStatus.DELIVERED.name().equals(o.getStatus()))
-                .toList();
-
-        Long totalRevenue = completedOrdersList.stream()
-                .mapToLong(OrderEntity::getTotalAmount)
-                .sum();
-
-        Long revenueToday = completedOrdersList.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfToday))
-                .mapToLong(OrderEntity::getTotalAmount)
-                .sum();
-
-        Long revenueThisMonth = completedOrdersList.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfMonth))
-                .mapToLong(OrderEntity::getTotalAmount)
-                .sum();
-
-        Long averageOrderValue = completedOrdersList.isEmpty() ? 0L :
-                totalRevenue / completedOrdersList.size();
+        Long totalRevenue = orderRepo.sumTotalAmountByStatusIn(completedStatuses);
+        Long revenueToday = orderRepo.sumTotalAmountByStatusInAndCreatedAtAfter(completedStatuses, startOfToday);
+        Long revenueThisMonth = orderRepo.sumTotalAmountByStatusInAndCreatedAtAfter(completedStatuses, startOfMonth);
+        Long averageOrderValue = completedOrders == 0 ? 0L : totalRevenue / completedOrders;
 
         // Product Statistics
         List<ProductEntity> allProducts = productRepo.findAll();
         long totalProducts = allProducts.size();
-        long activeProducts = allProducts.stream()
-                .filter(p -> "ACTIVE".equals(p.getStatus()))
-                .count();
+        long activeProducts = productRepo.countByStatus("ACTIVE");
 
-        // Simplified stock tracking
+        Map<Long, Long> availableStock = loadAvailableStockByProduct();
         long lowStockProducts = 0L;
         long outOfStockProducts = 0L;
+        Map<Long, Long> categoryProductCount = new HashMap<>();
 
-        // Shop Statistics (simplified)
-        long totalShops = allProducts.stream()
-                .map(ProductEntity::getShopId)
-                .distinct()
-                .count();
-        long activeShops = totalShops;
+        for (ProductEntity product : allProducts) {
+            Integer stockQuantity = product.getStockQuantity();
+            long stock = availableStock.getOrDefault(
+                    product.getId(),
+                    stockQuantity == null ? 0L : stockQuantity.longValue()
+            );
+            if (stock <= 0) {
+                outOfStockProducts++;
+            } else if (stock <= LOW_STOCK_THRESHOLD) {
+                lowStockProducts++;
+            }
+            categoryProductCount.merge(product.getCategoryId(), 1L, Long::sum);
+        }
+
+        // Shop Statistics
+        long totalShops = shopRepo.count();
+        long activeShops = shopRepo.countByStatus("ACTIVE");
 
         // Recent Activities
-        List<DashboardStatsResponse.RecentActivity> recentActivities = buildRecentActivities(allOrders);
+        List<DashboardStatsResponse.RecentActivity> recentActivities =
+                buildRecentActivities(orderRepo.findTop10ByOrderByCreatedAtDesc());
 
         // Revenue Chart (last 30 days)
-        List<DashboardStatsResponse.DailyRevenue> revenueChart = buildRevenueChart(completedOrdersList, startOfLast30Days);
+        List<OrderEntity> completedRecentOrders =
+                orderRepo.findByStatusInAndCreatedAtAfter(completedStatuses, startOfLast30Days);
+        List<DashboardStatsResponse.DailyRevenue> revenueChart =
+                buildRevenueChart(completedRecentOrders, startOfLast30Days);
 
         // Top Products
-        List<DashboardStatsResponse.TopProduct> topProducts = buildTopProducts();
+        List<DashboardStatsResponse.TopProduct> topProducts = buildTopProducts(completedStatuses);
 
         // Top Categories
-        List<DashboardStatsResponse.TopCategory> topCategories = buildTopCategories();
+        List<DashboardStatsResponse.TopCategory> topCategories =
+                buildTopCategories(completedStatuses, categoryProductCount);
 
         return new DashboardStatsResponse(
                 totalUsers, newUsersToday, newUsersThisMonth, activeUsers,
@@ -158,31 +178,43 @@ public class AdminDashboardService {
         log.info("Generating user analytics");
 
         List<UserEntity> allUsers = userRepo.findAll();
-        long totalUsers = allUsers.size();
-        long activeUsers = totalUsers;
-        long inactiveUsers = 0;
+        long totalUsers = userRepo.count();
+        long activeUsers = userRepo.countByStatus("ACTIVE");
+        long inactiveUsers = userRepo.countByStatus("DISABLED");
 
         Instant now = Instant.now();
         Instant last7Days = now.minus(7, ChronoUnit.DAYS);
         Instant last30Days = now.minus(30, ChronoUnit.DAYS);
 
-        long newUsersLast7Days = allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(last7Days))
-                .count();
-
-        long newUsersLast30Days = allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().isAfter(last30Days))
-                .count();
+        long newUsersLast7Days = userRepo.countByCreatedAtAfter(last7Days);
+        long newUsersLast30Days = userRepo.countByCreatedAtAfter(last30Days);
 
         // User growth chart (last 30 days)
         List<UserAnalyticsResponse.UserGrowth> userGrowthChart = buildUserGrowthChart(allUsers);
 
-        // Users by role (simplified)
-        List<UserAnalyticsResponse.UserByRole> usersByRole = List.of(
-                new UserAnalyticsResponse.UserByRole("CUSTOMER", totalUsers),
-                new UserAnalyticsResponse.UserByRole("SELLER", 0L),
-                new UserAnalyticsResponse.UserByRole("ADMIN", 0L)
-        );
+        Map<String, Long> roleCounts = new HashMap<>();
+        for (Object[] row : userRepo.countUsersByRole()) {
+            String code = (String) row[0];
+            long count = ((Number) row[1]).longValue();
+            roleCounts.put(code, count);
+        }
+
+        List<RoleEntity> roles = roleRepo.findAll();
+        List<UserAnalyticsResponse.UserByRole> usersByRole;
+        if (roles.isEmpty()) {
+            usersByRole = roleCounts.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(entry -> new UserAnalyticsResponse.UserByRole(entry.getKey(), entry.getValue()))
+                    .toList();
+        } else {
+            usersByRole = roles.stream()
+                    .sorted(Comparator.comparing(RoleEntity::getCode))
+                    .map(role -> new UserAnalyticsResponse.UserByRole(
+                            role.getCode(),
+                            roleCounts.getOrDefault(role.getCode(), 0L)
+                    ))
+                    .toList();
+        }
 
         return new UserAnalyticsResponse(
                 totalUsers,
@@ -202,49 +234,45 @@ public class AdminDashboardService {
     public SalesAnalyticsResponse getSalesAnalytics() {
         log.info("Generating sales analytics");
 
-        List<OrderEntity> allOrders = orderRepo.findAll();
-        List<OrderEntity> completedOrders = allOrders.stream()
-                .filter(o -> OrderStatus.COMPLETED.name().equals(o.getStatus()) ||
-                        OrderStatus.DELIVERED.name().equals(o.getStatus()))
-                .toList();
+        List<String> completedStatuses = List.of(
+                OrderStatus.COMPLETED.name(),
+                OrderStatus.DELIVERED.name()
+        );
 
-        Long totalRevenue = completedOrders.stream()
-                .mapToLong(OrderEntity::getTotalAmount)
-                .sum();
+        Long totalRevenue = orderRepo.sumTotalAmountByStatusIn(completedStatuses);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfThisMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime startOfThisMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
         LocalDateTime startOfLastMonth = startOfThisMonth.minusMonths(1);
 
-        Long revenueThisMonth = completedOrders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfThisMonth))
-                .mapToLong(OrderEntity::getTotalAmount)
-                .sum();
-
-        Long revenueLastMonth = completedOrders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfLastMonth) && o.getCreatedAt().isBefore(startOfThisMonth))
-                .mapToLong(OrderEntity::getTotalAmount)
-                .sum();
+        Long revenueThisMonth = orderRepo.sumTotalAmountByStatusInAndCreatedAtAfter(completedStatuses, startOfThisMonth);
+        Long revenueLastMonth = orderRepo.sumTotalAmountByStatusInAndCreatedAtBetween(
+                completedStatuses, startOfLastMonth, startOfThisMonth
+        );
 
         Double growthRate = revenueLastMonth > 0 ?
                 ((revenueThisMonth - revenueLastMonth) * 100.0) / revenueLastMonth : 0.0;
 
-        Long averageOrderValue = completedOrders.isEmpty() ? 0L :
-                totalRevenue / completedOrders.size();
+        long completedOrdersCount = orderRepo.countByStatusIn(completedStatuses);
+        Long averageOrderValue = completedOrdersCount == 0 ? 0L :
+                totalRevenue / completedOrdersCount;
 
-        long totalOrders = allOrders.size();
-        long ordersThisMonth = allOrders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfThisMonth))
-                .count();
+        long totalOrders = orderRepo.count();
+        long ordersThisMonth = orderRepo.countByCreatedAtAfter(startOfThisMonth);
 
         // Monthly sales chart (last 12 months)
-        List<SalesAnalyticsResponse.MonthlySales> monthlySalesChart = buildMonthlySalesChart(completedOrders);
+        LocalDateTime startOf12Months = startOfThisMonth.minusMonths(11);
+        List<OrderEntity> recentCompletedOrders =
+                orderRepo.findByStatusInAndCreatedAtAfter(completedStatuses, startOf12Months);
+        List<SalesAnalyticsResponse.MonthlySales> monthlySalesChart =
+                buildMonthlySalesChart(recentCompletedOrders, startOf12Months.toLocalDate());
 
         // Sales by category
-        List<SalesAnalyticsResponse.CategorySales> salesByCategory = buildSalesByCategory();
+        List<SalesAnalyticsResponse.CategorySales> salesByCategory = buildSalesByCategory(completedStatuses);
 
         // Top selling products
-        List<SalesAnalyticsResponse.TopSellingProduct> topSellingProducts = buildTopSellingProductsList();
+        List<SalesAnalyticsResponse.TopSellingProduct> topSellingProducts =
+                buildTopSellingProductsList(completedStatuses);
 
         return new SalesAnalyticsResponse(
                 totalRevenue,
@@ -261,6 +289,16 @@ public class AdminDashboardService {
     }
 
     // Helper Methods
+
+    private Map<Long, Long> loadAvailableStockByProduct() {
+        Map<Long, Long> stockByProduct = new HashMap<>();
+        for (Object[] row : skuRepo.sumAvailableStockByProductId()) {
+            Long productId = (Long) row[0];
+            long total = row[1] == null ? 0L : ((Number) row[1]).longValue();
+            stockByProduct.put(productId, total);
+        }
+        return stockByProduct;
+    }
 
     private List<DashboardStatsResponse.RecentActivity> buildRecentActivities(List<OrderEntity> orders) {
         return orders.stream()
@@ -301,59 +339,60 @@ public class AdminDashboardService {
                 .toList();
     }
 
-    private List<DashboardStatsResponse.TopProduct> buildTopProducts() {
-        // Get all order items and aggregate by product
-        List<OrderItemEntity> allItems = orderItemRepo.findAll();
+    private List<DashboardStatsResponse.TopProduct> buildTopProducts(List<String> statuses) {
+        List<Object[]> rows = orderItemRepo.aggregateProductSalesByStatus(statuses);
+        List<Object[]> topRows = rows.stream().limit(10).toList();
+        List<Long> productIds = topRows.stream()
+                .map(row -> (Long) row[0])
+                .distinct()
+                .toList();
 
-        Map<Long, Long> productQuantities = allItems.stream()
-                .collect(Collectors.groupingBy(
-                        OrderItemEntity::getProductId,
-                        Collectors.summingLong(OrderItemEntity::getQuantity)
-                ));
+        Map<Long, String> productNames = productRepo.findAllById(productIds).stream()
+                .collect(Collectors.toMap(ProductEntity::getId, ProductEntity::getName));
 
-        Map<Long, Long> productRevenue = allItems.stream()
-                .collect(Collectors.groupingBy(
-                        OrderItemEntity::getProductId,
-                        Collectors.summingLong(OrderItemEntity::getTotalPrice)
-                ));
-
-        return productQuantities.entrySet().stream()
-                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                .limit(10)
-                .map(entry -> {
-                    Long productId = entry.getKey();
-                    String productName = productRepo.findById(productId)
-                            .map(ProductEntity::getName)
-                            .orElse("Unknown Product");
-
+        return topRows.stream()
+                .map(row -> {
+                    Long productId = (Long) row[0];
+                    long quantity = ((Number) row[1]).longValue();
+                    Long revenue = row[2] == null ? 0L : ((Number) row[2]).longValue();
+                    String productName = productNames.getOrDefault(productId, "Unknown Product");
                     return new DashboardStatsResponse.TopProduct(
                             productId,
                             productName,
-                            entry.getValue(),
-                            productRevenue.getOrDefault(productId, 0L)
+                            quantity,
+                            revenue
                     );
                 })
                 .toList();
     }
 
-    private List<DashboardStatsResponse.TopCategory> buildTopCategories() {
-        List<ProductEntity> allProducts = productRepo.findAll();
+    private List<DashboardStatsResponse.TopCategory> buildTopCategories(
+            List<String> statuses,
+            Map<Long, Long> categoryProductCount
+    ) {
+        List<Object[]> rows = orderItemRepo.aggregateCategorySalesByStatus(statuses);
+        List<Object[]> topRows = rows.stream().limit(10).toList();
+        List<Long> categoryIds = topRows.stream()
+                .map(row -> (Long) row[0])
+                .distinct()
+                .toList();
 
-        Map<Long, Long> categoryProductCount = allProducts.stream()
-                .collect(Collectors.groupingBy(
-                        ProductEntity::getCategoryId,
-                        Collectors.counting()
-                ));
+        Map<Long, String> categoryNames = categoryRepo.findAllById(categoryIds).stream()
+                .collect(Collectors.toMap(CategoryEntity::getId, CategoryEntity::getName));
 
-        return categoryProductCount.entrySet().stream()
-                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                .limit(10)
-                .map(entry -> new DashboardStatsResponse.TopCategory(
-                        entry.getKey(),
-                        "Category " + entry.getKey(),
-                        entry.getValue(),
-                        0L // Order count would require join
-                ))
+        return topRows.stream()
+                .map(row -> {
+                    Long categoryId = (Long) row[0];
+                    long orderCount = ((Number) row[1]).longValue();
+                    long productCount = categoryProductCount.getOrDefault(categoryId, 0L);
+                    String categoryName = categoryNames.getOrDefault(categoryId, "Category " + categoryId);
+                    return new DashboardStatsResponse.TopCategory(
+                            categoryId,
+                            categoryName,
+                            productCount,
+                            orderCount
+                    );
+                })
                 .toList();
     }
 
@@ -385,7 +424,10 @@ public class AdminDashboardService {
         return chart;
     }
 
-    private List<SalesAnalyticsResponse.MonthlySales> buildMonthlySalesChart(List<OrderEntity> completedOrders) {
+    private List<SalesAnalyticsResponse.MonthlySales> buildMonthlySalesChart(
+            List<OrderEntity> completedOrders,
+            LocalDate startMonth
+    ) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
 
         Map<String, Long> revenueByMonth = completedOrders.stream()
@@ -400,50 +442,67 @@ public class AdminDashboardService {
                         Collectors.counting()
                 ));
 
-        return revenueByMonth.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(entry -> new SalesAnalyticsResponse.MonthlySales(
-                        entry.getKey(),
-                        entry.getValue(),
-                        orderCountByMonth.getOrDefault(entry.getKey(), 0L)
-                ))
+        List<SalesAnalyticsResponse.MonthlySales> chart = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            LocalDate month = startMonth.plusMonths(i);
+            String key = month.format(formatter);
+            chart.add(new SalesAnalyticsResponse.MonthlySales(
+                    key,
+                    revenueByMonth.getOrDefault(key, 0L),
+                    orderCountByMonth.getOrDefault(key, 0L)
+            ));
+        }
+        return chart;
+    }
+
+    private List<SalesAnalyticsResponse.CategorySales> buildSalesByCategory(List<String> statuses) {
+        List<Object[]> rows = orderItemRepo.aggregateCategorySalesByStatus(statuses);
+        List<Long> categoryIds = rows.stream()
+                .map(row -> (Long) row[0])
+                .distinct()
+                .toList();
+
+        Map<Long, String> categoryNames = categoryRepo.findAllById(categoryIds).stream()
+                .collect(Collectors.toMap(CategoryEntity::getId, CategoryEntity::getName));
+
+        return rows.stream()
+                .map(row -> {
+                    Long categoryId = (Long) row[0];
+                    long orderCount = ((Number) row[1]).longValue();
+                    Long revenue = row[2] == null ? 0L : ((Number) row[2]).longValue();
+                    String categoryName = categoryNames.getOrDefault(categoryId, "Category " + categoryId);
+                    return new SalesAnalyticsResponse.CategorySales(
+                            categoryId,
+                            categoryName,
+                            revenue,
+                            orderCount
+                    );
+                })
                 .toList();
     }
 
-    private List<SalesAnalyticsResponse.CategorySales> buildSalesByCategory() {
-        // Simplified: would require joining orders with products
-        return new ArrayList<>();
-    }
+    private List<SalesAnalyticsResponse.TopSellingProduct> buildTopSellingProductsList(List<String> statuses) {
+        List<Object[]> rows = orderItemRepo.aggregateProductSalesByStatus(statuses);
+        List<Object[]> topRows = rows.stream().limit(20).toList();
+        List<Long> productIds = topRows.stream()
+                .map(row -> (Long) row[0])
+                .distinct()
+                .toList();
 
-    private List<SalesAnalyticsResponse.TopSellingProduct> buildTopSellingProductsList() {
-        List<OrderItemEntity> allItems = orderItemRepo.findAll();
+        Map<Long, String> productNames = productRepo.findAllById(productIds).stream()
+                .collect(Collectors.toMap(ProductEntity::getId, ProductEntity::getName));
 
-        Map<Long, Long> productQuantities = allItems.stream()
-                .collect(Collectors.groupingBy(
-                        OrderItemEntity::getProductId,
-                        Collectors.summingLong(OrderItemEntity::getQuantity)
-                ));
-
-        Map<Long, Long> productRevenue = allItems.stream()
-                .collect(Collectors.groupingBy(
-                        OrderItemEntity::getProductId,
-                        Collectors.summingLong(OrderItemEntity::getTotalPrice)
-                ));
-
-        return productQuantities.entrySet().stream()
-                .sorted(Map.Entry.<Long, Long>comparingByValue().reversed())
-                .limit(20)
-                .map(entry -> {
-                    Long productId = entry.getKey();
-                    String productName = productRepo.findById(productId)
-                            .map(ProductEntity::getName)
-                            .orElse("Unknown Product");
-
+        return topRows.stream()
+                .map(row -> {
+                    Long productId = (Long) row[0];
+                    long quantity = ((Number) row[1]).longValue();
+                    Long revenue = row[2] == null ? 0L : ((Number) row[2]).longValue();
+                    String productName = productNames.getOrDefault(productId, "Unknown Product");
                     return new SalesAnalyticsResponse.TopSellingProduct(
                             productId,
                             productName,
-                            entry.getValue(),
-                            productRevenue.getOrDefault(productId, 0L)
+                            quantity,
+                            revenue
                     );
                 })
                 .toList();

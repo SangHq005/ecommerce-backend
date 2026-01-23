@@ -4,8 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateRefundRequest(
-        @NotNull(message = "Order ID is required")
+        // Either orderId OR orderCode should be provided
         Long orderId,
+        
+        // Alternative: Use orderCode if orderId is not available
+        String orderCode,
 
         @NotBlank(message = "Reason is required")
         String reason,
@@ -16,3 +19,4 @@ public record CreateRefundRequest(
         Long refundAmount
 ) {
 }
+

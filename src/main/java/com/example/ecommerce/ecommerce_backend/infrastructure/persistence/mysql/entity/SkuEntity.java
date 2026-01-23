@@ -38,6 +38,12 @@ public class SkuEntity {
     @Column(name="is_active", nullable=false)
     private boolean active = true;
 
+    @Column(name="reserved_stock", nullable=false)
+    private int reservedStock = 0;
+
+    @Column(name="image_url", length=512)
+    private String imageUrl;
+
     @Column(name="created_at", nullable=false, updatable=false)
     private Instant createdAt = Instant.now();
 
@@ -62,6 +68,10 @@ public class SkuEntity {
     public void setCompareAtPrice(Long compareAtPrice) { this.compareAtPrice = compareAtPrice; }
     public int getStockOnHand() { return stockOnHand; }
     public void setStockOnHand(int stockOnHand) { this.stockOnHand = stockOnHand; }
+    public int getReservedStock() { return reservedStock; }
+    public void setReservedStock(int reservedStock) { this.reservedStock = reservedStock; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

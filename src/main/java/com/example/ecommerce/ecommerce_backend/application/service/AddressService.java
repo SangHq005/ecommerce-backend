@@ -32,13 +32,21 @@ public class AddressService {
     @Transactional
     public UserAddressEntity create(Long userId, UserAddressEntity a) {
         a.setUserId(userId);
-        UserAddressEntity saved = addressRepo.save(a);
 
-        // If this is first address, set default
-        if (addressRepo.findByUserIdAndIsDefaultTrue(userId).isEmpty()) {
-            setDefault(userId, saved.getId());
-            saved.setDefault(true);
+        if (Boolean.TRUE.equals(a.isDefault())) {
+            List<UserAddressEntity> defaults = addressRepo.findByUserIdAndIsDefaultTrue(userId);
+            for (UserAddressEntity d : defaults) {
+                d.setDefault(false);
+                addressRepo.save(d);
+            }
+        } else {
+            // If this is the first address, force it to be default
+            if (addressRepo.countByUserId(userId) == 0) {
+                a.setDefault(true);
+            }
         }
+
+        UserAddressEntity saved = addressRepo.save(a);
 
         invalidate(userId);
         eventRepo.save(new EventLogDocument("ADDRESS_CHANGED", "user_" + userId, Instant.now(), null,
@@ -57,6 +65,18 @@ public class AddressService {
         a.setDistrict(patch.getDistrict());
         a.setProvince(patch.getProvince());
         a.setPostalCode(patch.getPostalCode());
+        a.setAddressType(patch.getAddressType());
+        
+        if (patch.isDefault() && !a.isDefault()) {
+             // If setting to true, handle unsetting others
+             List<UserAddressEntity> defaults = addressRepo.findByUserIdAndIsDefaultTrue(userId);
+             for (UserAddressEntity d : defaults) {
+                 d.setDefault(false);
+                 addressRepo.save(d);
+             }
+             a.setDefault(true);
+        }
+        
         UserAddressEntity saved = addressRepo.save(a);
 
         invalidate(userId);

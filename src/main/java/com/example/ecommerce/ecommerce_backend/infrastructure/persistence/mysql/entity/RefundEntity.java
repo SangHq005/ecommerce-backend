@@ -37,6 +37,17 @@ public class RefundEntity {
 
     @Column(name = "admin_note", length = 1000)
     private String adminNote;
+    
+    // NEW: Distinguish between REFUND and RETURN
+    @Column(name = "refund_type", length = 20)
+    private String refundType = "REFUND"; // REFUND or RETURN
+    
+    // NEW: Return tracking info
+    @Column(name = "return_tracking_number", length = 100)
+    private String returnTrackingNumber;
+    
+    @Column(name = "return_shipping_provider", length = 50)
+    private String returnShippingProvider;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -92,4 +103,14 @@ public class RefundEntity {
 
     public long getVersion() { return version; }
     public void setVersion(long version) { this.version = version; }
+    
+    // NEW getters/setters
+    public String getRefundType() { return refundType; }
+    public void setRefundType(String refundType) { this.refundType = refundType; }
+    
+    public String getReturnTrackingNumber() { return returnTrackingNumber; }
+    public void setReturnTrackingNumber(String returnTrackingNumber) { this.returnTrackingNumber = returnTrackingNumber; }
+    
+    public String getReturnShippingProvider() { return returnShippingProvider; }
+    public void setReturnShippingProvider(String returnShippingProvider) { this.returnShippingProvider = returnShippingProvider; }
 }

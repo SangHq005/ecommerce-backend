@@ -1,17 +1,33 @@
 package com.example.ecommerce.ecommerce_backend.api.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.example.ecommerce.ecommerce_backend.api.dto.profile.AddressRequest;
+import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
+import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
 import com.example.ecommerce.ecommerce_backend.application.service.AddressService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserAddressEntity;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/users/me/addresses")
+@PreAuthorize("hasRole('CLIENT')")
+@Tag(name = "User Addresses", description = "User address management")
 public class UserAddressController {
 
     private final AddressService addressService;
@@ -21,13 +37,19 @@ public class UserAddressController {
     }
 
     @GetMapping
-    public List<UserAddressEntity> list(Authentication auth) {
+    @Operation(summary = "List addresses", description = "Get all user addresses")
+    public ResponseEntity<ApiResponse<List<UserAddressEntity>>> list(Authentication auth) {
         Long userId = Long.valueOf(auth.getName());
-        return addressService.list(userId);
+        List<UserAddressEntity> addresses = addressService.list(userId);
+        return ResponseHelper.ok(addresses);
     }
 
     @PostMapping
-    public UserAddressEntity create(Authentication auth, @Valid @RequestBody AddressRequest req) {
+    @Operation(summary = "Create address", description = "Add a new address")
+    public ResponseEntity<ApiResponse<UserAddressEntity>> create(
+            Authentication auth,
+            @Valid @RequestBody AddressRequest req
+    ) {
         Long userId = Long.valueOf(auth.getName());
         UserAddressEntity a = new UserAddressEntity();
         a.setReceiverName(req.receiverName());
@@ -38,11 +60,21 @@ public class UserAddressController {
         a.setDistrict(req.district());
         a.setProvince(req.province());
         a.setPostalCode(req.postalCode());
-        return addressService.create(userId, a);
+        a.setAddressType(req.addressType());
+        if (Boolean.TRUE.equals(req.isDefault())) {
+            a.setDefault(true);
+        }
+        UserAddressEntity created = addressService.create(userId, a);
+        return ResponseHelper.created(created, "Address created successfully");
     }
 
     @PutMapping("/{id}")
-    public UserAddressEntity update(Authentication auth, @PathVariable Long id, @Valid @RequestBody AddressRequest req) {
+    @Operation(summary = "Update address", description = "Update an existing address")
+    public ResponseEntity<ApiResponse<UserAddressEntity>> update(
+            Authentication auth,
+            @PathVariable Long id,
+            @Valid @RequestBody AddressRequest req
+    ) {
         Long userId = Long.valueOf(auth.getName());
         UserAddressEntity patch = new UserAddressEntity();
         patch.setReceiverName(req.receiverName());
@@ -53,20 +85,27 @@ public class UserAddressController {
         patch.setDistrict(req.district());
         patch.setProvince(req.province());
         patch.setPostalCode(req.postalCode());
-        return addressService.update(userId, id, patch);
+        patch.setAddressType(req.addressType());
+        if (Boolean.TRUE.equals(req.isDefault())) {
+            patch.setDefault(true);
+        }
+        UserAddressEntity updated = addressService.update(userId, id, patch);
+        return ResponseHelper.ok(updated, "Address updated successfully");
     }
 
     @PostMapping("/{id}/default")
-    public ResponseEntity<Void> setDefault(Authentication auth, @PathVariable Long id) {
+    @Operation(summary = "Set default address", description = "Set address as default")
+    public ResponseEntity<ApiResponse<Void>> setDefault(Authentication auth, @PathVariable Long id) {
         Long userId = Long.valueOf(auth.getName());
         addressService.setDefault(userId, id);
-        return ResponseEntity.noContent().build();
+        return ResponseHelper.ok(null, "Default address updated");
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(Authentication auth, @PathVariable Long id) {
+    @Operation(summary = "Delete address", description = "Delete an address")
+    public ResponseEntity<ApiResponse<Void>> delete(Authentication auth, @PathVariable Long id) {
         Long userId = Long.valueOf(auth.getName());
         addressService.delete(userId, id);
-        return ResponseEntity.noContent().build();
+        return ResponseHelper.ok(null, "Address deleted successfully");
     }
 }

@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, Long> {
     List<CategoryEntity> findByActiveTrueOrderBySortOrderAscIdAsc();
+    boolean existsBySlug(String slug);
+    boolean existsByParentId(Long parentId);
 }

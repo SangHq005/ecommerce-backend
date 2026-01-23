@@ -11,5 +11,7 @@ public record AddressRequest(
         String ward,
         String district,
         String province,
-        String postalCode
+        String postalCode,
+        String addressType,
+        Boolean isDefault
 ) {}

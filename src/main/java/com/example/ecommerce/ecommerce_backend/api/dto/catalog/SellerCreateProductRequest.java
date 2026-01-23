@@ -8,5 +8,8 @@ public record SellerCreateProductRequest(
         Long brandId,
         @NotBlank String name,
         String description,
-        String mainImageUrl
+        String mainImageUrl,
+        @NotNull Long price,
+        Long originalPrice,
+        Integer stockQuantity
 ) {}
