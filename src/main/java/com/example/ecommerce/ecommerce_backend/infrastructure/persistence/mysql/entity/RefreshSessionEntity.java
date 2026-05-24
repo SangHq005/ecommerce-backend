@@ -1,9 +1,22 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "refresh_sessions",
         indexes = {
                 @Index(name = "idx_session_user", columnList = "user_id,status,expires_at"),
@@ -54,94 +67,5 @@ public class RefreshSessionEntity {
         if (createdAt == null) {
             createdAt = Instant.now();
         }
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getSessionRootJti() {
-        return sessionRootJti;
-    }
-
-    public void setSessionRootJti(String sessionRootJti) {
-        this.sessionRootJti = sessionRootJti;
-    }
-
-    public String getRefreshJti() {
-        return refreshJti;
-    }
-
-    public void setRefreshJti(String refreshJti) {
-        this.refreshJti = refreshJti;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public Instant getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(Instant expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getRotatedAt() {
-        return rotatedAt;
-    }
-
-    public void setRotatedAt(Instant rotatedAt) {
-        this.rotatedAt = rotatedAt;
-    }
-
-    public Instant getRevokedAt() {
-        return revokedAt;
-    }
-
-    public void setRevokedAt(Instant revokedAt) {
-        this.revokedAt = revokedAt;
     }
 }

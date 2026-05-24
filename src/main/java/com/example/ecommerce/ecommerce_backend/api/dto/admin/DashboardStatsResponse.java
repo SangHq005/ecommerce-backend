@@ -34,6 +34,10 @@ public record DashboardStatsResponse(
         // Shop Statistics
         long totalShops,
         long activeShops,
+        long pendingShopApprovals,
+
+        // Product Approval Statistics
+        long pendingProductApprovals,
 
         // Recent Activities
         List<RecentActivity> recentActivities,

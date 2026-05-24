@@ -8,12 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
-/**
- * Entity for tracking shop status changes.
- * Provides complete audit trail for shop lifecycle.
- */
 @Entity
+@Getter
+@Setter
 @Table(name = "shop_status_history")
 public class ShopStatusHistoryEntity {
     
@@ -61,35 +61,4 @@ public class ShopStatusHistoryEntity {
         this.reason = reason;
         this.createdAt = Instant.now();
     }
-    
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public Long getShopId() { return shopId; }
-    public void setShopId(Long shopId) { this.shopId = shopId; }
-    
-    public String getFromStatus() { return fromStatus; }
-    public void setFromStatus(String fromStatus) { this.fromStatus = fromStatus; }
-    
-    public String getToStatus() { return toStatus; }
-    public void setToStatus(String toStatus) { this.toStatus = toStatus; }
-    
-    public String getActorType() { return actorType; }
-    public void setActorType(String actorType) { this.actorType = actorType; }
-    
-    public Long getActorId() { return actorId; }
-    public void setActorId(Long actorId) { this.actorId = actorId; }
-    
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
-    
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
-    
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
-    
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

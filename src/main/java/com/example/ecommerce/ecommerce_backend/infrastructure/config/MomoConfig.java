@@ -16,6 +16,10 @@ public class MomoConfig {
     private String ipnUrl;
     private String requestType;
     private String lang;
+    private Integer timeoutSeconds = 15;
+
+    public Integer getTimeoutSeconds() { return timeoutSeconds; }
+    public void setTimeoutSeconds(Integer timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
 
     public String getPartnerCode() { return partnerCode; }
     public void setPartnerCode(String partnerCode) { this.partnerCode = partnerCode; }

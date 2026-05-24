@@ -1,11 +1,11 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository;
 
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.*;
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CategoryEntity;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CategoryEntity;
 
 @Repository
 public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, Long> {

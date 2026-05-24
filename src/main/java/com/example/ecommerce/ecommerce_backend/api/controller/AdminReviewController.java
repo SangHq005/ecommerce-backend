@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.ecommerce.ecommerce_backend.api.dto.review.ReviewResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.ReviewService;
+import com.example.ecommerce.ecommerce_backend.application.service.review.ReviewService;
 import com.example.ecommerce.ecommerce_backend.domain.review.ReviewStatus;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ReviewEntity;
 

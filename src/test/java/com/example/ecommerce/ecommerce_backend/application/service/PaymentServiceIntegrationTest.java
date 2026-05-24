@@ -1,5 +1,7 @@
 package com.example.ecommerce.ecommerce_backend.application.service;
 
+import com.example.ecommerce.ecommerce_backend.application.service.notification.EmailService;
+import com.example.ecommerce.ecommerce_backend.application.service.payment.PaymentService;
 import com.example.ecommerce.ecommerce_backend.domain.order.OrderStatus;
 import com.example.ecommerce.ecommerce_backend.domain.payment.PaymentMethod;
 import com.example.ecommerce.ecommerce_backend.domain.payment.PaymentStatus;
@@ -248,6 +250,59 @@ class PaymentServiceIntegrationTest {
             // Act & Assert
             assertThrows(IllegalArgumentException.class, 
                 () -> paymentService.processVNPayCallback(vnpParams));
+        }
+    }
+
+    @Nested
+    @DisplayName("processMomoRedirectVerification()")
+    class ProcessMomoRedirectVerificationTests {
+
+        @Test
+        @DisplayName("Should process successful MoMo redirect and commit stock")
+        void processMomoRedirectVerification_Success() {
+            PaymentEntity payment = paymentService.createPayment(testOrder, PaymentMethod.MOMO);
+
+            Map<String, String> redirectParams = new HashMap<>();
+            redirectParams.put("orderId", testOrder.getOrderCode());
+            redirectParams.put("resultCode", "0");
+
+            paymentService.processMomoRedirectVerification(
+                    testOrder.getOrderCode(),
+                    "MOMO-TXN-001",
+                    redirectParams
+            );
+
+            PaymentEntity updatedPayment = paymentRepository.findById(payment.getId()).orElseThrow();
+            assertEquals(PaymentStatus.COMPLETED, updatedPayment.getStatus());
+            assertEquals("MOMO-TXN-001", updatedPayment.getTransactionId());
+
+            OrderEntity updatedOrder = orderRepository.findById(testOrder.getId()).orElseThrow();
+            assertEquals(OrderStatus.PAID.name(), updatedOrder.getStatus());
+
+            StockReservationEntity reservation = stockReservationRepository
+                    .findByOrderTokenAndSkuId(testOrder.getOrderCode(), testSku.getId())
+                    .orElseThrow();
+            assertEquals("COMMITTED", reservation.getStatus());
+
+            SkuEntity updatedSku = skuRepository.findById(testSku.getId()).orElseThrow();
+            assertEquals(98, updatedSku.getStockOnHand());
+            assertEquals(8, updatedSku.getReservedStock());
+        }
+
+        @Test
+        @DisplayName("Should be idempotent when payment already completed")
+        void processMomoRedirectVerification_Idempotent() {
+            paymentService.createPayment(testOrder, PaymentMethod.MOMO);
+
+            Map<String, String> redirectParams = Map.of("resultCode", "0");
+
+            paymentService.processMomoRedirectVerification(
+                    testOrder.getOrderCode(), "MOMO-TXN-001", redirectParams);
+            paymentService.processMomoRedirectVerification(
+                    testOrder.getOrderCode(), "MOMO-TXN-002", redirectParams);
+
+            SkuEntity updatedSku = skuRepository.findById(testSku.getId()).orElseThrow();
+            assertEquals(98, updatedSku.getStockOnHand());
         }
     }
 

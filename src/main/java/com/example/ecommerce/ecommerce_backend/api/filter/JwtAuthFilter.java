@@ -1,6 +1,6 @@
 package com.example.ecommerce.ecommerce_backend.api.filter;
 
-import com.example.ecommerce.ecommerce_backend.application.service.JwtService;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.JwtService;
 import io.jsonwebtoken.Claims;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

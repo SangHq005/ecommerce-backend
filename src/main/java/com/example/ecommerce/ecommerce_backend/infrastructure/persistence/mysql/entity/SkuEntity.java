@@ -1,9 +1,21 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name="product_sku",
         uniqueConstraints = {
                 @UniqueConstraint(name="uk_sku_code", columnNames={"product_id","sku_code"}),
@@ -52,26 +64,4 @@ public class SkuEntity {
 
     @Version
     private long version;
-
-    public Long getId() { return id; }
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public String getSkuCode() { return skuCode; }
-    public void setSkuCode(String skuCode) { this.skuCode = skuCode; }
-    public String getOptionSignature() { return optionSignature; }
-    public void setOptionSignature(String optionSignature) { this.optionSignature = optionSignature; }
-    public String getOptionSignatureHash() { return optionSignatureHash; }
-    public void setOptionSignatureHash(String optionSignatureHash) { this.optionSignatureHash = optionSignatureHash; }
-    public long getPrice() { return price; }
-    public void setPrice(long price) { this.price = price; }
-    public Long getCompareAtPrice() { return compareAtPrice; }
-    public void setCompareAtPrice(Long compareAtPrice) { this.compareAtPrice = compareAtPrice; }
-    public int getStockOnHand() { return stockOnHand; }
-    public void setStockOnHand(int stockOnHand) { this.stockOnHand = stockOnHand; }
-    public int getReservedStock() { return reservedStock; }
-    public void setReservedStock(int reservedStock) { this.reservedStock = reservedStock; }
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

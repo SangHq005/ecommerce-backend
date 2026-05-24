@@ -9,14 +9,6 @@ import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
 import lombok.Builder;
 import lombok.Getter;
 
-/**
- * Order Domain Model (Aggregate Root)
- * Encapsulates invariants and business logic for the Order domain.
- * 
- * Shopee-like Order Flow:
- * SUBMITTED → PAYMENT_PENDING → PAID → TO_SHIP → PROCESSING → READY_TO_SHIP
- * → SHIPPED → IN_TRANSIT → OUT_FOR_DELIVERY → DELIVERED → COMPLETED
- */
 @Getter
 public class Order {
     private final String orderCode;

@@ -2,6 +2,9 @@ package com.example.ecommerce.ecommerce_backend.api.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,8 +26,8 @@ import com.example.ecommerce.ecommerce_backend.api.dto.catalog.SkuRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.catalog.UpsertImageResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.CatalogService;
-import com.example.ecommerce.ecommerce_backend.application.service.LocalFileStorageService;
+import com.example.ecommerce.ecommerce_backend.application.service.catalog.CatalogFacade;
+import com.example.ecommerce.ecommerce_backend.application.service.storage.ImageUploadService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductImageEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SkuEntity;
@@ -39,20 +42,27 @@ import jakarta.validation.Valid;
 @Tag(name = "Seller Catalog", description = "Seller product management")
 public class SellerCatalogController {
 
-    private final CatalogService catalog;
-    private final LocalFileStorageService storage;
+    private final CatalogFacade catalog;
+    private final ImageUploadService uploadService;
 
-    public SellerCatalogController(CatalogService catalog, LocalFileStorageService storage) {
+    public SellerCatalogController(CatalogFacade catalog, ImageUploadService uploadService) {
         this.catalog = catalog;
-        this.storage = storage;
+        this.uploadService = uploadService;
     }
 
     @GetMapping
-    @Operation(summary = "List products", description = "Get all seller's products")
-    public ResponseEntity<ApiResponse<List<ProductEntity>>> list(Authentication auth) {
+    @Operation(summary = "List products", description = "Get seller's products with pagination")
+    public ResponseEntity<ApiResponse<List<ProductEntity>>> list(
+            Authentication auth,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) String status
+    ) {
         Long sellerId = Long.valueOf(auth.getName());
-        List<ProductEntity> products = catalog.sellerListProducts(sellerId);
-        return ResponseHelper.ok(products);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        var pageable = PageRequest.of(page, safeSize, Sort.by(Sort.Direction.DESC, "id"));
+        var products = catalog.sellerListProducts(sellerId, status, pageable);
+        return ResponseHelper.page(products);
     }
 
     @PostMapping
@@ -95,7 +105,7 @@ public class SellerCatalogController {
             @RequestPart("file") MultipartFile file
     ) {
         Long sellerId = Long.valueOf(auth.getName());
-        String url = storage.save("product-images", file);
+        String url = uploadService.uploadProductImage(file).fileUrl();
         ProductImageEntity saved = catalog.sellerUpsertImage(sellerId, id, sortOrder, url);
         UpsertImageResponse response = new UpsertImageResponse(
                 saved.getId(), saved.getProductId(), saved.getSortOrder(), saved.getImageUrl()
@@ -134,8 +144,8 @@ public class SellerCatalogController {
             @Valid @RequestBody List<OptionGroupRequest> groups
     ) {
         Long sellerId = Long.valueOf(auth.getName());
-        List<CatalogService.OptionGroupSpec> specs = groups.stream()
-                .map(g -> new CatalogService.OptionGroupSpec(g.name(), g.sortOrder(), g.values()))
+        List<CatalogFacade.OptionGroupSpec> specs = groups.stream()
+                .map(g -> new CatalogFacade.OptionGroupSpec(g.name(), g.sortOrder(), g.values()))
                 .toList();
         catalog.sellerSetOptions(sellerId, id, specs);
         return ResponseHelper.ok(null, "Options updated");
@@ -149,8 +159,8 @@ public class SellerCatalogController {
             @Valid @RequestBody List<SkuRequest> skus
     ) {
         Long sellerId = Long.valueOf(auth.getName());
-        List<CatalogService.SkuSpec> specs = skus.stream()
-                .map(s -> new CatalogService.SkuSpec(
+        List<CatalogFacade.SkuSpec> specs = skus.stream()
+                .map(s -> new CatalogFacade.SkuSpec(
                         s.skuCode(), s.optionSignature(), s.price(),
                         s.compareAtPrice(), s.stockOnHand(), s.active(), s.imageUrl()
                 ))

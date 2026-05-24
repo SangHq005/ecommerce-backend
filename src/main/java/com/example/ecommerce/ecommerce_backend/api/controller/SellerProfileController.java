@@ -19,8 +19,8 @@ import com.example.ecommerce.ecommerce_backend.api.exception.BusinessException;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ErrorCode;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.ImageUploadService;
-import com.example.ecommerce.ecommerce_backend.application.service.SellerProfileService;
+import com.example.ecommerce.ecommerce_backend.application.service.storage.ImageUploadService;
+import com.example.ecommerce.ecommerce_backend.application.service.seller.SellerProfileService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -101,7 +101,7 @@ public class SellerProfileController {
             @RequestParam("file") MultipartFile file
     ) {
         // Use product image upload service (same validation and storage)
-        UploadResponse response = uploadService.uploadProductImage(file);
+        UploadResponse response = uploadService.uploadSellerDocument(file);
         return ResponseHelper.created(response, "Document uploaded successfully");
     }
 

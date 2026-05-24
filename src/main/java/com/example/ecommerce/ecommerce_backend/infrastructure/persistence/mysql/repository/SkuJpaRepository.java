@@ -25,6 +25,13 @@ public interface SkuJpaRepository extends JpaRepository<SkuEntity, Long> {
     @Query("select s.productId, sum(s.stockOnHand - s.reservedStock) from SkuEntity s group by s.productId")
     List<Object[]> sumAvailableStockByProductId();
 
+    @Query("SELECT COUNT(DISTINCT s.productId) FROM SkuEntity s WHERE (s.stockOnHand - s.reservedStock) <= 0")
+    long countDistinctOutOfStockProducts();
+
+    @Query("SELECT COUNT(DISTINCT s.productId) FROM SkuEntity s " +
+           "WHERE (s.stockOnHand - s.reservedStock) > 0 AND (s.stockOnHand - s.reservedStock) <= :threshold")
+    long countDistinctLowStockProducts(@Param("threshold") int threshold);
+
     @Query("SELECT s FROM SkuEntity s, ProductEntity p WHERE s.productId = p.id AND p.shopId = :shopId AND s.stockOnHand <= :threshold")
     List<SkuEntity> findLowStockByShop(@Param("shopId") Long shopId, @Param("threshold") int threshold);
 }

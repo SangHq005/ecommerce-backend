@@ -28,8 +28,8 @@ import com.example.ecommerce.ecommerce_backend.api.dto.auth.TrustedLoginRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.auth.VerifyOtpRequest;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.AuthService;
-import com.example.ecommerce.ecommerce_backend.application.service.JwtService;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.AuthService;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -298,11 +298,27 @@ public class AuthController {
         );
     }
 
+    @PostMapping("/change-password")
+    @Operation(summary = "Change password", description = "Change password for authenticated user")
+    public ResponseEntity<ApiResponse<MessageResponse>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest req,
+            Authentication authentication
+    ) {
+        Long userId = Long.valueOf(authentication.getName());
+        auth.changePassword(userId, req.currentPassword(), req.newPassword());
+        return ResponseHelper.ok(
+                new MessageResponse("Password has been changed successfully."),
+                "Password changed successfully"
+        );
+    }
+
     // ========== RESPONSE DTOs ==========
 
     public record MeResponse(String userId, String email, String fullName, String phoneNumber, String gender, java.time.LocalDate dateOfBirth, String avatarUrl, List<String> roles) {}
     
     public record UpdateProfileRequest(String fullName, String phoneNumber, String gender, String dateOfBirth, String avatarUrl) {}
+
+    public record ChangePasswordRequest(String currentPassword, String newPassword) {}
 
     public record MessageResponse(String message) {}
 }

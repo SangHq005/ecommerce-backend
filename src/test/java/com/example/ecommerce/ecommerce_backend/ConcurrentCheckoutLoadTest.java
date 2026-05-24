@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.example.ecommerce.ecommerce_backend.api.dto.order.CheckoutRequest;
-import com.example.ecommerce.ecommerce_backend.application.service.PasswordHasher;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.PasswordHasher;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.BrandEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CategoryEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
@@ -95,7 +95,7 @@ public class ConcurrentCheckoutLoadTest extends BaseIntegrationTest {
     private PasswordHasher hasher;
 
     @Autowired
-    private com.example.ecommerce.ecommerce_backend.application.service.JwtService jwtService;
+    private com.example.ecommerce.ecommerce_backend.application.service.auth.JwtService jwtService;
 
     private static final int CONCURRENT_REQUESTS = 100;
     private static final int INITIAL_STOCK = 200;

@@ -1,11 +1,13 @@
 package com.example.ecommerce.ecommerce_backend.shared.util;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.example.ecommerce.ecommerce_backend.api.dto.ai.AiAssistantResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.springframework.stereotype.Component;
-
-import java.util.*;
 
 /**
  * Utility class for formatting AI assistant responses.
@@ -29,7 +31,7 @@ public class ResponseFormatter {
         sb.append("# ").append(product.getName()).append("\n\n");
         
         // Basic Info
-        sb.append("## 📋 Thông tin cơ bản\n\n");
+        sb.append("##Thông tin cơ bản\n\n");
         sb.append("| Thuộc tính | Giá trị |\n");
         sb.append("|------------|----------|\n");
         sb.append("| **ID** | ").append(product.getId()).append(" |\n");

@@ -20,7 +20,7 @@ import jakarta.validation.Valid;
 import com.example.ecommerce.ecommerce_backend.api.dto.catalog.ProductDetailsResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.CatalogService;
+import com.example.ecommerce.ecommerce_backend.application.service.catalog.CatalogFacade;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 import com.example.ecommerce.ecommerce_backend.api.dto.shop.SuspendRequest;
 
@@ -33,9 +33,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Admin Catalog", description = "Admin product management")
 public class AdminCatalogController {
 
-    private final CatalogService catalog;
+    private final CatalogFacade catalog;
 
-    public AdminCatalogController(CatalogService catalog) {
+    public AdminCatalogController(CatalogFacade catalog) {
         this.catalog = catalog;
     }
 
@@ -56,9 +56,9 @@ public class AdminCatalogController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get product detail", description = "Get product details by ID")
+    @Operation(summary = "Get product detail", description = "Get product details by ID (admin can view any status)")
     public ResponseEntity<ApiResponse<ProductDetailsResponse>> getProductDetail(@PathVariable Long id) {
-        ProductDetailsResponse detail = catalog.getProductDetail(id);
+        ProductDetailsResponse detail = catalog.adminGetProductDetail(id);
         return ResponseHelper.ok(detail);
     }
 

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class CloudStorageConfig {
 
     private String provider = "cloudinary"; // local, cloudinary
+    private String prefix = "shopmart";
     private String uploadDir = "uploads";
     private long maxFileSize = 10485760; // 10MB default
     
@@ -19,6 +20,9 @@ public class CloudStorageConfig {
     // Getters and Setters
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
+
+    public String getPrefix() { return prefix; }
+    public void setPrefix(String prefix) { this.prefix = prefix; }
 
     public String getUploadDir() { return uploadDir; }
     public void setUploadDir(String uploadDir) { this.uploadDir = uploadDir; }

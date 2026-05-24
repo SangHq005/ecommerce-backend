@@ -9,11 +9,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
-/**
- * Product Status History - tracks all status changes for auditing
- */
+//Product Status History - tracks all status changes for auditing
 @Entity
+@Getter
+@Setter
 @Table(name = "product_status_history")
 public class ProductStatusHistoryEntity {
     
@@ -34,10 +36,10 @@ public class ProductStatusHistoryEntity {
     private String newStatus;
     
     @Column(name = "changed_by")
-    private Long changedBy;  // User ID who made the change
+    private Long changedBy; 
     
     @Column(name = "changed_by_type", length = 20)
-    private String changedByType;  // SELLER, ADMIN, SYSTEM
+    private String changedByType;  
     
     @Column(length = 500)
     private String reason;
@@ -51,32 +53,4 @@ public class ProductStatusHistoryEntity {
             createdAt = Instant.now();
         }
     }
-    
-    // === Getters and Setters ===
-    
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    
-    public Long getShopId() { return shopId; }
-    public void setShopId(Long shopId) { this.shopId = shopId; }
-    
-    public String getPreviousStatus() { return previousStatus; }
-    public void setPreviousStatus(String previousStatus) { this.previousStatus = previousStatus; }
-    
-    public String getNewStatus() { return newStatus; }
-    public void setNewStatus(String newStatus) { this.newStatus = newStatus; }
-    
-    public Long getChangedBy() { return changedBy; }
-    public void setChangedBy(Long changedBy) { this.changedBy = changedBy; }
-    
-    public String getChangedByType() { return changedByType; }
-    public void setChangedByType(String changedByType) { this.changedByType = changedByType; }
-    
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
-    
-    public Instant getCreatedAt() { return createdAt; }
 }

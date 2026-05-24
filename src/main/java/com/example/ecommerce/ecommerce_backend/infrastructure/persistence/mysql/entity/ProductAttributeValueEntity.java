@@ -1,10 +1,24 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "product_attribute_value",
        uniqueConstraints = @UniqueConstraint(
            name = "uk_product_attribute",
@@ -48,37 +62,4 @@ public class ProductAttributeValueEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
     
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    
-    public Long getAttributeId() { return attributeId; }
-    public void setAttributeId(Long attributeId) { this.attributeId = attributeId; }
-    
-    public ProductEntity getProduct() { return product; }
-    public void setProduct(ProductEntity product) { this.product = product; }
-    
-    public AttributeEntity getAttribute() { return attribute; }
-    public void setAttribute(AttributeEntity attribute) { this.attribute = attribute; }
-    
-    public String getValueText() { return valueText; }
-    public void setValueText(String valueText) { this.valueText = valueText; }
-    
-    public BigDecimal getValueNumber() { return valueNumber; }
-    public void setValueNumber(BigDecimal valueNumber) { this.valueNumber = valueNumber; }
-    
-    public Boolean getValueBoolean() { return valueBoolean; }
-    public void setValueBoolean(Boolean valueBoolean) { this.valueBoolean = valueBoolean; }
-    
-    public String getDisplayValue() { return displayValue; }
-    public void setDisplayValue(String displayValue) { this.displayValue = displayValue; }
-    
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

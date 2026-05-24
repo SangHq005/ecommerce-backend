@@ -12,8 +12,12 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "product",
         uniqueConstraints = @UniqueConstraint(name = "uk_product_shop_slug", columnNames = {"shop_id","slug"}))
 public class ProductEntity {
@@ -74,7 +78,7 @@ public class ProductEntity {
     @Column(name = "action_reason", length = 512)
     private String actionReason;
     
-    // === Product Listing Enhancement ===
+    // Product Listing
     
     @Column(name = "quality_score")
     private Integer qualityScore;  // 0-100, calculated based on completeness
@@ -108,65 +112,4 @@ public class ProductEntity {
 
     @Version
     private long version;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getShopId() { return shopId; }
-    public void setShopId(Long shopId) { this.shopId = shopId; }
-    public Long getSellerUserId() { return sellerUserId; }
-    public void setSellerUserId(Long sellerUserId) { this.sellerUserId = sellerUserId; }
-    public Long getCategoryId() { return categoryId; }
-    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
-    public Long getBrandId() { return brandId; }
-    public void setBrandId(Long brandId) { this.brandId = brandId; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getSlug() { return slug; }
-    public void setSlug(String slug) { this.slug = slug; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public String getMainImageUrl() { return mainImageUrl; }
-    public void setMainImageUrl(String mainImageUrl) { this.mainImageUrl = mainImageUrl; }
-    public Long getPrice() { return price; }
-    public void setPrice(Long price) { this.price = price; }
-    public Long getOriginalPrice() { return originalPrice; }
-    public void setOriginalPrice(Long originalPrice) { this.originalPrice = originalPrice; }
-    public Integer getStockQuantity() { return stockQuantity; }
-    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
-    public String getSku() { return sku; }
-    public void setSku(String sku) { this.sku = sku; }
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
-    public BigDecimal getAverageRating() { return averageRating; }
-    public void setAverageRating(BigDecimal averageRating) { this.averageRating = averageRating; }
-    public Integer getReviewCount() { return reviewCount; }
-    public void setReviewCount(Integer reviewCount) { this.reviewCount = reviewCount; }
-    public Integer getSoldCount() { return soldCount; }
-    public void setSoldCount(Integer soldCount) { this.soldCount = soldCount; }
-    public String getActionReason() { return actionReason; }
-    public void setActionReason(String actionReason) { this.actionReason = actionReason; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-    
-    // === New Field Getters/Setters ===
-    public Integer getQualityScore() { return qualityScore; }
-    public void setQualityScore(Integer qualityScore) { this.qualityScore = qualityScore; }
-    public Instant getPublishedAt() { return publishedAt; }
-    public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }
-    public Instant getHiddenAt() { return hiddenAt; }
-    public void setHiddenAt(Instant hiddenAt) { this.hiddenAt = hiddenAt; }
-    public Instant getRejectedAt() { return rejectedAt; }
-    public void setRejectedAt(Instant rejectedAt) { this.rejectedAt = rejectedAt; }
-    public Long getRejectedBy() { return rejectedBy; }
-    public void setRejectedBy(Long rejectedBy) { this.rejectedBy = rejectedBy; }
-    public Boolean getIsFeatured() { return isFeatured; }
-    public void setIsFeatured(Boolean isFeatured) { this.isFeatured = isFeatured; }
-    public Integer getWeightGrams() { return weightGrams; }
-    public void setWeightGrams(Integer weightGrams) { this.weightGrams = weightGrams; }
-    public String getShippingFeeType() { return shippingFeeType; }
-    public void setShippingFeeType(String shippingFeeType) { this.shippingFeeType = shippingFeeType; }
 }

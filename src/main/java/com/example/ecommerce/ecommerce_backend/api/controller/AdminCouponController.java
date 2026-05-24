@@ -24,7 +24,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.coupon.CreateCouponReques
 import com.example.ecommerce.ecommerce_backend.api.dto.coupon.UpdateCouponStatusRequest;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.CouponService;
+import com.example.ecommerce.ecommerce_backend.application.service.coupon.CouponService;
 import com.example.ecommerce.ecommerce_backend.domain.promotion.CouponStatus;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CouponEntity;
 

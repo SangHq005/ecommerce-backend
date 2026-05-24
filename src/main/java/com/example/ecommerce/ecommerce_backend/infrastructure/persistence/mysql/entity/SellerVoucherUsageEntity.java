@@ -9,11 +9,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Entity tracking seller voucher usage per user per order.
  */
 @Entity
+@Getter
+@Setter
 @Table(name = "seller_voucher_usage")
 public class SellerVoucherUsageEntity {
 
@@ -40,23 +44,4 @@ public class SellerVoucherUsageEntity {
     void prePersist() {
         usedAt = Instant.now();
     }
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getVoucherId() { return voucherId; }
-    public void setVoucherId(Long voucherId) { this.voucherId = voucherId; }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
-
-    public Long getDiscountAmount() { return discountAmount; }
-    public void setDiscountAmount(Long discountAmount) { this.discountAmount = discountAmount; }
-
-    public Instant getUsedAt() { return usedAt; }
-    public void setUsedAt(Instant usedAt) { this.usedAt = usedAt; }
 }

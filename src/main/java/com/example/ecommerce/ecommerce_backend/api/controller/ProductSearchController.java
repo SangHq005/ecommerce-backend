@@ -13,7 +13,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.search.PageResponse;
 import com.example.ecommerce.ecommerce_backend.api.dto.search.ProductSearchHit;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.ProductSearchService;
+import com.example.ecommerce.ecommerce_backend.application.service.catalog.ProductSearchService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

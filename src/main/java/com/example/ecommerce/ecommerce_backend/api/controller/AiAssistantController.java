@@ -4,7 +4,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.ai.AiAssistantRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.ai.AiAssistantResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.AiAssistantService;
+import com.example.ecommerce.ecommerce_backend.application.service.recommendation.AiAssistantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

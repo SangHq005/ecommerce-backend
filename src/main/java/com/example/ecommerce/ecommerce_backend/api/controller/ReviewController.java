@@ -22,7 +22,7 @@ import com.example.ecommerce.ecommerce_backend.api.exception.BusinessException;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ErrorCode;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.ReviewService;
+import com.example.ecommerce.ecommerce_backend.application.service.review.ReviewService;
 import com.example.ecommerce.ecommerce_backend.domain.model.RoleCode;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ReviewEntity;
 

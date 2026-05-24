@@ -1,9 +1,20 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "notification")
 public class NotificationEntity {
 
@@ -15,7 +26,7 @@ public class NotificationEntity {
     private Long userId;
 
     @Column(nullable = false, length = 50)
-    private String type; // ORDER_CREATED, ORDER_STATUS_CHANGED, PAYMENT_SUCCESS, COUPON_NEW, REVIEW_APPROVED, etc.
+    private String type; // ORDER_CREATED, ORDER_STATUS_CHANGED, PAYMENT_SUCCESS, COUPON_NEW, REVIEW_APPROVED
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -37,35 +48,4 @@ public class NotificationEntity {
 
     @Column(name = "read_at")
     private Instant readAt;
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-
-    public String getReferenceType() { return referenceType; }
-    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
-
-    public Long getReferenceId() { return referenceId; }
-    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
-
-    public Boolean getIsRead() { return isRead; }
-    public void setIsRead(Boolean isRead) { this.isRead = isRead; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-    public Instant getReadAt() { return readAt; }
-    public void setReadAt(Instant readAt) { this.readAt = readAt; }
 }

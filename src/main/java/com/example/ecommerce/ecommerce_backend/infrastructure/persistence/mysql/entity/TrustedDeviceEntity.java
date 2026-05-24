@@ -1,9 +1,22 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "trusted_device")
 public class TrustedDeviceEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,17 +37,4 @@ public class TrustedDeviceEntity {
     
     @Column(name = "last_used_at")
     private Instant lastUsedAt;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public UserEntity getUser() { return user; }
-    public void setUser(UserEntity user) { this.user = user; }
-    public String getDeviceId() { return deviceId; }
-    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
-    public Instant getTrustedAt() { return trustedAt; }
-    public void setTrustedAt(Instant trustedAt) { this.trustedAt = trustedAt; }
-    public Instant getExpiresAt() { return expiresAt; }
-    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
-    public Instant getLastUsedAt() { return lastUsedAt; }
-    public void setLastUsedAt(Instant lastUsedAt) { this.lastUsedAt = lastUsedAt; }
 }

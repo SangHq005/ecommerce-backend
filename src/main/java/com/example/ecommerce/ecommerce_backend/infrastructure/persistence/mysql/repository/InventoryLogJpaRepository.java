@@ -14,7 +14,6 @@ public interface InventoryLogJpaRepository extends JpaRepository<InventoryLogEnt
     Page<InventoryLogEntity> findByShopId(Long shopId, Pageable pageable);
     List<InventoryLogEntity> findByReferenceId(String referenceId);
     
-    // NEW: For reports
     List<InventoryLogEntity> findByShopIdAndCreatedAtAfter(Long shopId, Instant since);
     List<InventoryLogEntity> findByProductIdAndCreatedAtAfter(Long productId, Instant since);
 }

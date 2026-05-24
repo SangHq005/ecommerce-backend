@@ -2,7 +2,7 @@ package com.example.ecommerce.ecommerce_backend.api.controller;
 
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.AuditService;
+import com.example.ecommerce.ecommerce_backend.application.service.admin.AuditService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mongo.document.EventLogDocument;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -15,12 +15,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
-/**
- * Entity for tracking order status changes.
- * Provides complete audit trail of order lifecycle.
- */
+//Entity for tracking order status changes.
 @Entity
+@Getter
+@Setter
 @Table(name = "order_status_history")
 public class OrderStatusHistoryEntity {
 
@@ -107,35 +108,4 @@ public class OrderStatusHistoryEntity {
     public static OrderStatusHistoryEntity adminChange(Long orderId, String fromStatus, String toStatus, Long adminId, String reason) {
         return create(orderId, fromStatus, toStatus, ActorType.ADMIN, adminId, reason, null, null);
     }
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
-
-    public String getFromStatus() { return fromStatus; }
-    public void setFromStatus(String fromStatus) { this.fromStatus = fromStatus; }
-
-    public String getToStatus() { return toStatus; }
-    public void setToStatus(String toStatus) { this.toStatus = toStatus; }
-
-    public ActorType getActorType() { return actorType; }
-    public void setActorType(ActorType actorType) { this.actorType = actorType; }
-
-    public Long getActorId() { return actorId; }
-    public void setActorId(Long actorId) { this.actorId = actorId; }
-
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
-
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
-
-    public Map<String, Object> getMetadata() { return metadata; }
-    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

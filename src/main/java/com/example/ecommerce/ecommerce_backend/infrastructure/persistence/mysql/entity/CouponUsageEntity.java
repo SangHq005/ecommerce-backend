@@ -1,9 +1,21 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "coupon_usage",
         indexes = {
                 @Index(name = "idx_coupon_usage_coupon", columnList = "coupon_id"),
@@ -34,17 +46,4 @@ public class CouponUsageEntity {
     void prePersist() {
         usedAt = Instant.now();
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getCouponId() { return couponId; }
-    public void setCouponId(Long couponId) { this.couponId = couponId; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
-    public Long getDiscountAmount() { return discountAmount; }
-    public void setDiscountAmount(Long discountAmount) { this.discountAmount = discountAmount; }
-    public Instant getUsedAt() { return usedAt; }
-    public void setUsedAt(Instant usedAt) { this.usedAt = usedAt; }
 }

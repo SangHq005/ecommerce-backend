@@ -11,4 +11,6 @@ public interface SellerShopJpaRepository extends JpaRepository<SellerShopEntity,
     Optional<SellerShopEntity> findByShopSlug(String shopSlug);
     List<SellerShopEntity> findByStatus(String status);
     long countByStatus(String status);
+    List<SellerShopEntity> findByLogoUrlStartingWith(String prefix);
+    List<SellerShopEntity> findByBannerUrlStartingWith(String prefix);
 }

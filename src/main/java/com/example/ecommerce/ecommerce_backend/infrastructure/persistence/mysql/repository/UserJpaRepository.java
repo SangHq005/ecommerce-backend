@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
+import org.springframework.data.repository.query.Param;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,9 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, Long>, JpaS
 
     long countByStatus(String status);
     long countByCreatedAtAfter(Instant instant);
+
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt >= :start AND u.createdAt < :end")
+    long countByCreatedAtBetween(@Param("start") Instant start, @Param("end") Instant end);
 
     @Query("select r.code, count(distinct u.id) from UserEntity u join u.roles r group by r.code")
     List<Object[]> countUsersByRole();

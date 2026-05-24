@@ -165,11 +165,13 @@ public class SearchQueryRepository {
 
     // MySQL boolean mode: add * suffix for prefix match, keep it simple for local
     private String toBooleanQuery(String q) {
-        String[] parts = q.trim().split("\\s+");
+        // Sanitize input to prevent SQL grammar errors from special boolean mode operators
+        String sanitized = q.replaceAll("[+\\-<>~*\"@()]", " ");
+        String[] parts = sanitized.trim().split("\\s+");
         StringBuilder sb = new StringBuilder();
         for (String p : parts) {
             if (p.isBlank()) continue;
-            sb.append("+").append(p).append("* ").toString();
+            sb.append("+").append(p).append("* ");
         }
         return sb.toString().trim();
     }
@@ -201,8 +203,7 @@ public class SearchQueryRepository {
      * @param cutoffDate Delete queries older than this date
      */
     public void deleteOldQueries(java.time.LocalDateTime cutoffDate) {
-        // If you have a search_query_log table, implement deletion here
-        // For now, this is a placeholder since search queries might be logged elsewhere
+      
         String sql = "DELETE FROM search_query_log WHERE created_at < :cutoffDate";
         Map<String, Object> params = new HashMap<>();
         params.put("cutoffDate", Timestamp.from(cutoffDate.atZone(java.time.ZoneId.systemDefault()).toInstant()));
@@ -210,8 +211,7 @@ public class SearchQueryRepository {
         try {
             jdbc.update(sql, params);
         } catch (Exception e) {
-            // Table might not exist, log and continue
-            // In production, ensure the table exists or remove this method
+    
         }
     }
 }

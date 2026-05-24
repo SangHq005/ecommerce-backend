@@ -11,6 +11,8 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,9 +33,16 @@ public class CacheConfig {
     public static final String CACHE_USER_PROFILE = "user-profile";
     public static final String CACHE_SHOP_INFO = "shop-info";
     public static final String CACHE_COUPONS = "coupons";
+    public static final String CACHE_SELLER_ANALYTICS = "seller-analytics";
 
     @Bean
-    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory, ObjectMapper objectMapper) {
+        GenericJackson2JsonRedisSerializer jsonSerializer =
+                GenericJackson2JsonRedisSerializer.builder()
+                        .objectMapper(objectMapper.copy())
+                        .defaultTyping(true)
+                        .build();
+
         // Default cache configuration
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(5)) // Default TTL: 5 minutes
@@ -41,9 +50,7 @@ public class CacheConfig {
                         RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer())
                 )
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(
-                                new GenericJackson2JsonRedisSerializer()
-                        )
+                        RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer)
                 )
                 .disableCachingNullValues();
 
@@ -77,6 +84,10 @@ public class CacheConfig {
         // Coupons - 10 minutes TTL
         cacheConfigurations.put(CACHE_COUPONS,
                 defaultConfig.entryTtl(Duration.ofMinutes(10)));
+
+        // Seller analytics overview - 3 minutes TTL
+        cacheConfigurations.put(CACHE_SELLER_ANALYTICS,
+                defaultConfig.entryTtl(Duration.ofMinutes(3)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)

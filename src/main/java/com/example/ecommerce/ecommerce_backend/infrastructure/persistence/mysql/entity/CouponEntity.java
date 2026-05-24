@@ -1,15 +1,32 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import com.example.ecommerce.ecommerce_backend.domain.promotion.CouponStatus;
-import com.example.ecommerce.ecommerce_backend.domain.promotion.CouponType;
-import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.time.Instant;
 import java.util.List;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.example.ecommerce.ecommerce_backend.domain.promotion.CouponStatus;
+import com.example.ecommerce.ecommerce_backend.domain.promotion.CouponType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "coupon",
         uniqueConstraints = @UniqueConstraint(name = "uk_coupon_code", columnNames = {"code"}))
 public class CouponEntity {
@@ -101,48 +118,6 @@ public class CouponEntity {
     void preUpdate() {
         updatedAt = Instant.now();
     }
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public CouponType getType() { return type; }
-    public void setType(CouponType type) { this.type = type; }
-    public CouponStatus getStatus() { return status; }
-    public void setStatus(CouponStatus status) { this.status = status; }
-    public Long getDiscountValue() { return discountValue; }
-    public void setDiscountValue(Long discountValue) { this.discountValue = discountValue; }
-    public Long getMaxDiscountAmount() { return maxDiscountAmount; }
-    public void setMaxDiscountAmount(Long maxDiscountAmount) { this.maxDiscountAmount = maxDiscountAmount; }
-    public Long getMinOrderAmount() { return minOrderAmount; }
-    public void setMinOrderAmount(Long minOrderAmount) { this.minOrderAmount = minOrderAmount; }
-    public Instant getStartDate() { return startDate; }
-    public void setStartDate(Instant startDate) { this.startDate = startDate; }
-    public Instant getEndDate() { return endDate; }
-    public void setEndDate(Instant endDate) { this.endDate = endDate; }
-    public Integer getUsageLimit() { return usageLimit; }
-    public void setUsageLimit(Integer usageLimit) { this.usageLimit = usageLimit; }
-    public Integer getUsageCount() { return usageCount; }
-    public void setUsageCount(Integer usageCount) { this.usageCount = usageCount; }
-    public Integer getUsageLimitPerUser() { return usageLimitPerUser; }
-    public void setUsageLimitPerUser(Integer usageLimitPerUser) { this.usageLimitPerUser = usageLimitPerUser; }
-    public Boolean getAutoApply() { return autoApply; }
-    public void setAutoApply(Boolean autoApply) { this.autoApply = autoApply; }
-    public List<Long> getApplicableProductIds() { return applicableProductIds; }
-    public void setApplicableProductIds(List<Long> applicableProductIds) { this.applicableProductIds = applicableProductIds; }
-    public List<Long> getApplicableCategoryIds() { return applicableCategoryIds; }
-    public void setApplicableCategoryIds(List<Long> applicableCategoryIds) { this.applicableCategoryIds = applicableCategoryIds; }
-    public List<Long> getApplicableUserIds() { return applicableUserIds; }
-    public void setApplicableUserIds(List<Long> applicableUserIds) { this.applicableUserIds = applicableUserIds; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 
     public void incrementUsageCount() {
         this.usageCount++;

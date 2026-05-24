@@ -17,7 +17,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.catalog.ProductDetailsRes
 import com.example.ecommerce.ecommerce_backend.api.dto.shop.PublicShopResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.CatalogService;
+import com.example.ecommerce.ecommerce_backend.application.service.catalog.CatalogFacade;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.BrandEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.CategoryEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
@@ -33,11 +33,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Public Catalog", description = "Public product catalog endpoints")
 public class PublicCatalogController {
 
-    private final CatalogService catalog;
+    private final CatalogFacade catalog;
     private final SellerShopJpaRepository shopRepository;
     private final ProductJpaRepository productRepository;
 
-    public PublicCatalogController(CatalogService catalog, SellerShopJpaRepository shopRepository, ProductJpaRepository productRepository) {
+    public PublicCatalogController(CatalogFacade catalog, SellerShopJpaRepository shopRepository, ProductJpaRepository productRepository) {
         this.catalog = catalog;
         this.shopRepository = shopRepository;
         this.productRepository = productRepository;

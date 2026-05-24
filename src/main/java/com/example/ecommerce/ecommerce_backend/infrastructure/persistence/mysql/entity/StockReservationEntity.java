@@ -1,9 +1,21 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "stock_reservation",
         uniqueConstraints = @UniqueConstraint(name="uk_reserve_order_sku", columnNames = {"order_token","sku_id"}),
         indexes = {
@@ -34,21 +46,4 @@ public class StockReservationEntity {
 
     @Column(name="updated_at", insertable=false, updatable=false)
     private LocalDateTime updatedAt;
-
-    // Getters
-    public Long getId() { return id; }
-    public String getOrderToken() { return orderToken; }
-    public Long getSkuId() { return skuId; }
-    public Integer getQty() { return qty; }
-    public String getStatus() { return status; }
-    public LocalDateTime getExpiresAt() { return expiresAt; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    // Setters
-    public void setOrderToken(String orderToken) { this.orderToken = orderToken; }
-    public void setSkuId(Long skuId) { this.skuId = skuId; }
-    public void setQty(Integer qty) { this.qty = qty; }
-    public void setStatus(String status) { this.status = status; }
-    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
 }

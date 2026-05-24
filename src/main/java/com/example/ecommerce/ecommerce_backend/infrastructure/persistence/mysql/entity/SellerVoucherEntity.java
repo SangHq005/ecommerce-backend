@@ -19,15 +19,17 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
+import lombok.Getter;
+import lombok.Setter;
 
-/**
- * Entity for shop-specific vouchers created by sellers.
- * Supports percentage and fixed amount discounts with various constraints.
- */
+import java.util.ArrayList;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "seller_voucher",
         uniqueConstraints = @UniqueConstraint(name = "uk_seller_voucher_code", columnNames = {"shop_id", "code"}))
-public class SellerVoucherEntity {
+public class SellerVoucherEntity implements Cloneable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -150,64 +152,36 @@ public class SellerVoucherEntity {
         return Math.min(discount, orderAmount);
     }
 
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Prototype Pattern implementation
+    public SellerVoucherEntity() {}
 
-    public Long getShopId() { return shopId; }
-    public void setShopId(Long shopId) { this.shopId = shopId; }
+    public SellerVoucherEntity(SellerVoucherEntity target) {
+        if (target != null) {
+            this.shopId = target.shopId;
+            this.name = target.name;
+            this.description = target.description;
+            this.discountType = target.discountType;
+            this.discountValue = target.discountValue;
+            this.maxDiscountAmount = target.maxDiscountAmount;
+            this.minOrderAmount = target.minOrderAmount;
+            this.startDate = target.startDate;
+            this.endDate = target.endDate;
+            this.usageLimit = target.usageLimit;
+            this.usageLimitPerUser = target.usageLimitPerUser;
+            this.status = VoucherStatus.DRAFT; // Reset status for clone
+            
+            // Deep copy collections
+            if (target.applicableProductIds != null) {
+                this.applicableProductIds = new ArrayList<>(target.applicableProductIds);
+            }
+            if (target.applicableCategoryIds != null) {
+                this.applicableCategoryIds = new ArrayList<>(target.applicableCategoryIds);
+            }
+        }
+    }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public DiscountType getDiscountType() { return discountType; }
-    public void setDiscountType(DiscountType discountType) { this.discountType = discountType; }
-
-    public Long getDiscountValue() { return discountValue; }
-    public void setDiscountValue(Long discountValue) { this.discountValue = discountValue; }
-
-    public Long getMaxDiscountAmount() { return maxDiscountAmount; }
-    public void setMaxDiscountAmount(Long maxDiscountAmount) { this.maxDiscountAmount = maxDiscountAmount; }
-
-    public Long getMinOrderAmount() { return minOrderAmount; }
-    public void setMinOrderAmount(Long minOrderAmount) { this.minOrderAmount = minOrderAmount; }
-
-    public Instant getStartDate() { return startDate; }
-    public void setStartDate(Instant startDate) { this.startDate = startDate; }
-
-    public Instant getEndDate() { return endDate; }
-    public void setEndDate(Instant endDate) { this.endDate = endDate; }
-
-    public Integer getUsageLimit() { return usageLimit; }
-    public void setUsageLimit(Integer usageLimit) { this.usageLimit = usageLimit; }
-
-    public Integer getUsageCount() { return usageCount; }
-    public void setUsageCount(Integer usageCount) { this.usageCount = usageCount; }
-
-    public Integer getUsageLimitPerUser() { return usageLimitPerUser; }
-    public void setUsageLimitPerUser(Integer usageLimitPerUser) { this.usageLimitPerUser = usageLimitPerUser; }
-
-    public VoucherStatus getStatus() { return status; }
-    public void setStatus(VoucherStatus status) { this.status = status; }
-
-    public List<Long> getApplicableProductIds() { return applicableProductIds; }
-    public void setApplicableProductIds(List<Long> applicableProductIds) { this.applicableProductIds = applicableProductIds; }
-
-    public List<Long> getApplicableCategoryIds() { return applicableCategoryIds; }
-    public void setApplicableCategoryIds(List<Long> applicableCategoryIds) { this.applicableCategoryIds = applicableCategoryIds; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-
-    public Long getVersion() { return version; }
-    public void setVersion(Long version) { this.version = version; }
+    @Override
+    public SellerVoucherEntity clone() {
+        return new SellerVoucherEntity(this);
+    }
 }

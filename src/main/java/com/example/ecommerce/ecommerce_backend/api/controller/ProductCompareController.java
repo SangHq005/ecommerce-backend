@@ -4,7 +4,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.catalog.CompareProductRes
 import com.example.ecommerce.ecommerce_backend.api.exception.BusinessException;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.ProductCompareService;
+import com.example.ecommerce.ecommerce_backend.application.service.catalog.ProductCompareService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

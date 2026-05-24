@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.AdminCatalogManagementService;
+import com.example.ecommerce.ecommerce_backend.application.service.admin.AdminCatalogManagementService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.AttributeEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.AttributeGroupEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.BrandEntity;

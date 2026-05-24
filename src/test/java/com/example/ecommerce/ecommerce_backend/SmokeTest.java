@@ -9,7 +9,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.order.CheckoutRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.order.OrderResponse;
 import com.example.ecommerce.ecommerce_backend.api.dto.payment.CreatePaymentRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.seller.UpdateOrderStatusRequest;
-import com.example.ecommerce.ecommerce_backend.application.service.PasswordHasher;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.PasswordHasher;
 import com.example.ecommerce.ecommerce_backend.domain.order.OrderStatus;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.*;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.*;
@@ -82,6 +82,18 @@ public class SmokeTest extends BaseIntegrationTest {
 
     @Autowired
     private PasswordHasher hasher;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mongo.repository.EventLogMongoRepository eventLogMongoRepository;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mongo.repository.UserEventMongoRepository userEventMongoRepository;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mongo.repository.UserCategoryAffinityMongoRepository userCategoryAffinityMongoRepository;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mongo.repository.ChatMessageMongoRepository chatMessageMongoRepository;
 
     private static String clientAccessToken;
     private static String sellerAccessToken;
@@ -186,7 +198,7 @@ public class SmokeTest extends BaseIntegrationTest {
 
         mockMvc.perform(get("/api/v1/catalog/public/products/" + testProductId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(testProductId));
+                .andExpect(jsonPath("$.data.product.id").value(testProductId));
     }
 
     @Test

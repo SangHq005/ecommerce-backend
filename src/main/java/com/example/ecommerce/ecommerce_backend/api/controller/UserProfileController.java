@@ -16,8 +16,8 @@ import com.example.ecommerce.ecommerce_backend.api.dto.profile.ProfileResponse;
 import com.example.ecommerce.ecommerce_backend.api.dto.profile.UpdateProfileRequest;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.LocalFileStorageService;
-import com.example.ecommerce.ecommerce_backend.application.service.ProfileService;
+import com.example.ecommerce.ecommerce_backend.application.service.storage.ImageUploadService;
+import com.example.ecommerce.ecommerce_backend.application.service.user.ProfileService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserProfileEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,11 +31,11 @@ import jakarta.validation.Valid;
 public class UserProfileController {
 
     private final ProfileService profileService;
-    private final LocalFileStorageService storage;
+    private final ImageUploadService imageUploadService;
 
-    public UserProfileController(ProfileService profileService, LocalFileStorageService storage) {
+    public UserProfileController(ProfileService profileService, ImageUploadService imageUploadService) {
         this.profileService = profileService;
-        this.storage = storage;
+        this.imageUploadService = imageUploadService;
     }
 
     @GetMapping("/profile")
@@ -68,8 +68,8 @@ public class UserProfileController {
             @RequestPart("file") MultipartFile file
     ) {
         Long userId = Long.valueOf(auth.getName());
-        String url = storage.save("avatars", file);
-        UserProfileEntity p = profileService.updateAvatar(userId, url);
+        var uploadRes = imageUploadService.uploadUserAvatar(file);
+        UserProfileEntity p = profileService.updateAvatar(userId, uploadRes.fileUrl());
         return ResponseHelper.ok(toResponse(p), "Avatar uploaded successfully");
     }
 

@@ -16,8 +16,8 @@ import com.example.ecommerce.ecommerce_backend.api.dto.shop.ShopResponse;
 import com.example.ecommerce.ecommerce_backend.api.dto.shop.ShopUpsertRequest;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.LocalFileStorageService;
-import com.example.ecommerce.ecommerce_backend.application.service.ShopService;
+import com.example.ecommerce.ecommerce_backend.application.service.storage.ImageUploadService;
+import com.example.ecommerce.ecommerce_backend.application.service.seller.ShopService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SellerShopEntity;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,11 +31,11 @@ import jakarta.validation.Valid;
 public class SellerShopController {
 
     private final ShopService shopService;
-    private final LocalFileStorageService storage;
+    private final ImageUploadService uploadService;
 
-    public SellerShopController(ShopService shopService, LocalFileStorageService storage) {
+    public SellerShopController(ShopService shopService, ImageUploadService uploadService) {
         this.shopService = shopService;
-        this.storage = storage;
+        this.uploadService = uploadService;
     }
 
     @GetMapping
@@ -93,7 +93,7 @@ public class SellerShopController {
             @RequestPart("file") MultipartFile file
     ) {
         Long sellerId = Long.valueOf(auth.getName());
-        String url = storage.save("shop-logos", file);
+        String url = uploadService.uploadShopLogo(file).fileUrl();
         SellerShopEntity s = shopService.setLogo(sellerId, url);
         return ResponseHelper.ok(toResp(s), "Logo uploaded");
     }
@@ -105,7 +105,7 @@ public class SellerShopController {
             @RequestPart("file") MultipartFile file
     ) {
         Long sellerId = Long.valueOf(auth.getName());
-        String url = storage.save("shop-banners", file);
+        String url = uploadService.uploadShopBanner(file).fileUrl();
         SellerShopEntity s = shopService.setBanner(sellerId, url);
         return ResponseHelper.ok(toResp(s), "Banner uploaded");
     }

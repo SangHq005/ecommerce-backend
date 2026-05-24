@@ -1,9 +1,20 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "idempotency_key",
         uniqueConstraints = @UniqueConstraint(name = "uk_idem_scope_key", columnNames = {"scope", "idem_key"}))
 public class IdempotencyKeyEntity {
@@ -35,22 +46,4 @@ public class IdempotencyKeyEntity {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
-
-    // getters/setters
-    public Long getId() { return id; }
-    public String getIdemKey() { return idemKey; }
-    public void setIdemKey(String idemKey) { this.idemKey = idemKey; }
-    public String getScope() { return scope; }
-    public void setScope(String scope) { this.scope = scope; }
-    public String getRequestHash() { return requestHash; }
-    public void setRequestHash(String requestHash) { this.requestHash = requestHash; }
-    public Integer getResponseCode() { return responseCode; }
-    public void setResponseCode(Integer responseCode) { this.responseCode = responseCode; }
-    public String getResponseBody() { return responseBody; }
-    public void setResponseBody(String responseBody) { this.responseBody = responseBody; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public Instant getExpiresAt() { return expiresAt; }
-    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
-    public Instant getCreatedAt() { return createdAt; }
 }

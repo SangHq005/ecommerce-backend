@@ -22,14 +22,18 @@ import com.example.ecommerce.ecommerce_backend.api.exception.BusinessException;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ErrorCode;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.InventoryService;
-import com.example.ecommerce.ecommerce_backend.application.service.InventoryService.BatchAdjustmentRequest;
-import com.example.ecommerce.ecommerce_backend.application.service.InventoryService.BatchAdjustmentResult;
-import com.example.ecommerce.ecommerce_backend.application.service.InventoryService.InventorySummary;
-import com.example.ecommerce.ecommerce_backend.application.service.InventoryService.LowStockAlert;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.InventoryService;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.InventoryService.BatchAdjustmentRequest;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.InventoryService.BatchAdjustmentResult;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.InventoryService.InventorySummary;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.InventoryService.LowStockAlert;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.InventoryLogEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SellerShopEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SkuEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SellerShopJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductJpaRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,10 +52,19 @@ public class SellerInventoryController {
 
     private final InventoryService inventoryService;
     private final SellerShopJpaRepository shopRepo;
+    private final SkuJpaRepository skuRepo;
+    private final ProductJpaRepository productRepo;
 
-    public SellerInventoryController(InventoryService inventoryService, SellerShopJpaRepository shopRepo) {
+    public SellerInventoryController(
+            InventoryService inventoryService,
+            SellerShopJpaRepository shopRepo,
+            SkuJpaRepository skuRepo,
+            ProductJpaRepository productRepo
+    ) {
         this.inventoryService = inventoryService;
         this.shopRepo = shopRepo;
+        this.skuRepo = skuRepo;
+        this.productRepo = productRepo;
     }
 
     private Long currentUserId() {
@@ -69,6 +82,16 @@ public class SellerInventoryController {
     private SellerShopEntity getMyShop() {
         return shopRepo.findBySellerUserId(currentUserId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Shop not found"));
+    }
+
+    private void validateSkuOwnership(Long skuId) {
+        SkuEntity sku = skuRepo.findById(skuId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "SKU not found: " + skuId));
+        ProductEntity product = productRepo.findById(sku.getProductId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "Product not found for SKU: " + skuId));
+        if (!product.getShopId().equals(getMyShop().getId())) {
+            throw new BusinessException(ErrorCode.AUTH_ACCESS_DENIED, "Access Denied: You do not own this SKU");
+        }
     }
 
     // ==================== DASHBOARD ====================
@@ -99,6 +122,9 @@ public class SellerInventoryController {
             @Valid @RequestBody BatchAdjustRequest request
     ) {
         SellerShopEntity shop = getMyShop();
+        for (var adj : request.adjustments()) {
+            validateSkuOwnership(adj.skuId());
+        }
         List<BatchAdjustmentResult> results = inventoryService.batchAdjustStock(
                 shop.getId(), 
                 request.adjustments(), 
@@ -115,6 +141,7 @@ public class SellerInventoryController {
             @PathVariable Long skuId,
             @Valid @RequestBody SingleAdjustRequest request
     ) {
+        validateSkuOwnership(skuId);
         var updated = inventoryService.adjustStock(
                 skuId, 
                 request.delta(), 
@@ -151,6 +178,7 @@ public class SellerInventoryController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
+        validateSkuOwnership(skuId);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<InventoryLogEntity> history = inventoryService.getHistory(skuId, pageable);
         return ResponseHelper.page(history);

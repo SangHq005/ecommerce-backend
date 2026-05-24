@@ -21,7 +21,7 @@ import com.example.ecommerce.ecommerce_backend.api.exception.BusinessException;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ErrorCode;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.SellerCustomerService;
+import com.example.ecommerce.ecommerce_backend.application.service.seller.SellerCustomerService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

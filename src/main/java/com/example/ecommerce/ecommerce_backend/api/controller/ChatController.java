@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.ecommerce.ecommerce_backend.api.dto.chat.ChatMessageRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.chat.ChatMessageResponse;
-import com.example.ecommerce.ecommerce_backend.application.service.ChatService;
+import com.example.ecommerce.ecommerce_backend.application.service.recommendation.ChatService;
 
 import lombok.RequiredArgsConstructor;
 

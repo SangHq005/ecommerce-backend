@@ -1,8 +1,10 @@
 package com.example.ecommerce.ecommerce_backend.application.service;
 
 import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.ReservationServiceImpl;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.SkuEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.StockReservationEntity;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SkuJpaRepository;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.StockReservationJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,18 @@ class ReservationServiceTest {
 
     @Mock
     private StockReservationJpaRepository resRepo;
+
+    @Mock
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.ProductJpaRepository productRepo;
+
+    @Mock
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.SellerShopJpaRepository shopRepo;
+
+    @Mock
+    private com.example.ecommerce.ecommerce_backend.application.service.notification.NotificationService notificationService;
+
+    @Mock
+    private com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.InventoryLogJpaRepository inventoryLogRepo;
 
     @InjectMocks
     private ReservationServiceImpl reservationService;
@@ -179,7 +193,7 @@ class ReservationServiceTest {
             ApiException ex = assertThrows(ApiException.class, 
                 () -> reservationService.reserve(orderToken, skuId, 5)); // Requesting 5, only 2 available
             assertEquals(409, ex.getStatus());
-            assertTrue(ex.getMessage().contains("Insufficient stock"));
+            assertTrue(ex.getMessage().contains("không đủ số lượng") || ex.getMessage().contains("Insufficient stock"));
         }
 
         @Test
@@ -295,10 +309,17 @@ class ReservationServiceTest {
             // Arrange
             String orderToken = "ORDER-001";
             SkuEntity sku = createSku(1L, 100, 20);
+            sku.setProductId(10L);
             StockReservationEntity r1 = createReservation(orderToken, 1L, 5, "RESERVED");
+
+            ProductEntity product = new ProductEntity();
+            product.setId(10L);
+            product.setShopId(100L);
+            product.setStockQuantity(100);
 
             when(resRepo.findByOrderToken(orderToken)).thenReturn(List.of(r1));
             when(skuRepo.findByIdForUpdate(1L)).thenReturn(Optional.of(sku));
+            when(productRepo.findById(10L)).thenReturn(Optional.of(product));
 
             // Act
             reservationService.commit(orderToken);
@@ -351,13 +372,27 @@ class ReservationServiceTest {
             // Arrange
             String orderToken = "ORDER-001";
             SkuEntity sku1 = createSku(1L, 100, 20);
+            sku1.setProductId(10L);
             SkuEntity sku2 = createSku(2L, 50, 10);
+            sku2.setProductId(20L);
             StockReservationEntity r1 = createReservation(orderToken, 1L, 5, "RESERVED");
             StockReservationEntity r2 = createReservation(orderToken, 2L, 3, "RESERVED");
+
+            ProductEntity p1 = new ProductEntity();
+            p1.setId(10L);
+            p1.setShopId(100L);
+            p1.setStockQuantity(100);
+
+            ProductEntity p2 = new ProductEntity();
+            p2.setId(20L);
+            p2.setShopId(100L);
+            p2.setStockQuantity(50);
 
             when(resRepo.findByOrderToken(orderToken)).thenReturn(List.of(r1, r2));
             when(skuRepo.findByIdForUpdate(1L)).thenReturn(Optional.of(sku1));
             when(skuRepo.findByIdForUpdate(2L)).thenReturn(Optional.of(sku2));
+            when(productRepo.findById(10L)).thenReturn(Optional.of(p1));
+            when(productRepo.findById(20L)).thenReturn(Optional.of(p2));
 
             // Act
             reservationService.commit(orderToken);

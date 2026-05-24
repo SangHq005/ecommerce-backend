@@ -3,7 +3,7 @@ package com.example.ecommerce.ecommerce_backend;
 import com.example.ecommerce.ecommerce_backend.api.controller.CheckoutController;
 import com.example.ecommerce.ecommerce_backend.api.dto.order.CheckoutRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.order.OrderResponse;
-import com.example.ecommerce.ecommerce_backend.application.service.OrderService;
+import com.example.ecommerce.ecommerce_backend.application.service.order.OrderService;
 import com.example.ecommerce.ecommerce_backend.api.exception.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ public class OrderCheckoutIntegrationTest {
     @Autowired private ObjectMapper om;
 
     @MockBean private OrderService orderService;
-    @MockBean private com.example.ecommerce.ecommerce_backend.application.service.JwtService jwtService;
+    @MockBean private com.example.ecommerce.ecommerce_backend.application.service.auth.JwtService jwtService;
     @MockBean private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
     @MockBean private org.springframework.data.redis.core.StringRedisTemplate stringRedisTemplate;
 
@@ -56,9 +56,9 @@ public class OrderCheckoutIntegrationTest {
                         .with(csrf()) // Spring Security test often requires CSRF token for POST
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].orderCode", is("ORD-123")));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].orderCode", is("ORD-123")));
     }
 
     @Test

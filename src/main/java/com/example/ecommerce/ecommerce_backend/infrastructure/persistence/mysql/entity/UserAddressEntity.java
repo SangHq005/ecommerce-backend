@@ -1,9 +1,20 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
+@Getter
+@Setter
 @Table(name = "user_address")
 public class UserAddressEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,29 +61,4 @@ public class UserAddressEntity {
 
     @Version
     private long version;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-    public String getReceiverName() { return receiverName; }
-    public void setReceiverName(String receiverName) { this.receiverName = receiverName; }
-    public String getReceiverPhone() { return receiverPhone; }
-    public void setReceiverPhone(String receiverPhone) { this.receiverPhone = receiverPhone; }
-    public String getLine1() { return line1; }
-    public void setLine1(String line1) { this.line1 = line1; }
-    public String getLine2() { return line2; }
-    public void setLine2(String line2) { this.line2 = line2; }
-    public String getWard() { return ward; }
-    public void setWard(String ward) { this.ward = ward; }
-    public String getDistrict() { return district; }
-    public void setDistrict(String district) { this.district = district; }
-    public String getProvince() { return province; }
-    public void setProvince(String province) { this.province = province; }
-    public String getPostalCode() { return postalCode; }
-    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
-    public String getAddressType() { return addressType; }
-    public void setAddressType(String addressType) { this.addressType = addressType; }
-    public boolean isDefault() { return isDefault; }
-    public void setDefault(boolean aDefault) { isDefault = aDefault; }
 }

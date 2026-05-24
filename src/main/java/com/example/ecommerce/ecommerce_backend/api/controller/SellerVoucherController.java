@@ -25,7 +25,7 @@ import com.example.ecommerce.ecommerce_backend.api.exception.BusinessException;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ErrorCode;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.SellerVoucherService;
+import com.example.ecommerce.ecommerce_backend.application.service.seller.SellerVoucherService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -105,6 +105,16 @@ public class SellerVoucherController {
     ) {
         SellerVoucherResponse voucher = voucherService.activateVoucher(currentUserId(), voucherId);
         return ResponseHelper.ok(voucher, "Voucher activated successfully");
+    }
+
+    @PostMapping("/{voucherId}/duplicate")
+    @Operation(summary = "Duplicate voucher", description = "Duplicate an existing voucher using Prototype pattern")
+    public ResponseEntity<ApiResponse<SellerVoucherResponse>> duplicateVoucher(
+            @PathVariable Long voucherId,
+            @Valid @RequestBody com.example.ecommerce.ecommerce_backend.api.dto.voucher.DuplicateVoucherRequest request
+    ) {
+        SellerVoucherResponse voucher = voucherService.duplicateVoucher(currentUserId(), voucherId, request);
+        return ResponseHelper.created(voucher, "Voucher duplicated successfully using Prototype Pattern");
     }
 
     @PostMapping("/{voucherId}/pause")

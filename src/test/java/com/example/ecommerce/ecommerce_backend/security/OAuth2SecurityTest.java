@@ -19,8 +19,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.ecommerce.ecommerce_backend.application.service.AuthService;
-import com.example.ecommerce.ecommerce_backend.application.service.JwtService;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.AuthService;
+import com.example.ecommerce.ecommerce_backend.application.service.auth.JwtService;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.RoleEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.UserEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository.RoleJpaRepository;

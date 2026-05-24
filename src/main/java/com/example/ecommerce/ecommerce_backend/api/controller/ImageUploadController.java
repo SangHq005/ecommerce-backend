@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.ecommerce.ecommerce_backend.api.dto.upload.UploadResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.ImageUploadService;
+import com.example.ecommerce.ecommerce_backend.application.service.storage.ImageUploadService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -24,6 +24,9 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
     long countByCreatedAtAfter(LocalDateTime start);
     long countByStatus(String status);
     long countByStatusIn(List<String> statuses);
+    
+    // Admin queries
+    Page<OrderEntity> findByStatus(String status, Pageable pageable);
 
     List<OrderEntity> findByStatusInAndCreatedAtAfter(List<String> statuses, LocalDateTime start);
 
@@ -52,23 +55,14 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
     // User queries
     Page<OrderEntity> findByUserId(Long userId, Pageable pageable);
     List<OrderEntity> findByUserIdAndStatus(Long userId, String status);
+        
     
-    // === NEW: Auto-complete queries ===
-    
-    /**
-     * Find orders ready for auto-completion
-     * Orders that are DELIVERED and auto_complete_at has passed
-     */
     @Query("SELECT o FROM OrderEntity o WHERE o.status = :status AND o.autoCompleteAt <= :now AND o.buyerConfirmed = false")
     List<OrderEntity> findOrdersToAutoComplete(
             @Param("status") String status,
             @Param("now") LocalDateTime now
     );
     
-    /**
-     * Find delivered orders that need reminder
-     * Orders delivered between autoCompleteThreshold and reminderThreshold ago
-     */
     @Query("SELECT o FROM OrderEntity o WHERE o.status = :status " +
            "AND o.deliveredAt > :autoCompleteThreshold " +
            "AND o.deliveredAt <= :reminderThreshold " +
@@ -79,18 +73,14 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
             @Param("reminderThreshold") LocalDateTime reminderThreshold
     );
     
-    /**
-     * Find orders by status with shipping info
-     */
+  
     @Query("SELECT o FROM OrderEntity o WHERE o.status = :status AND o.shippingProvider = :provider")
     List<OrderEntity> findByStatusAndShippingProvider(
             @Param("status") String status,
             @Param("provider") String provider
     );
     
-    /**
-     * Count orders by status for a shop within date range
-     */
+
     @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.shopId = :shopId AND o.status = :status " +
            "AND o.createdAt >= :startDate AND o.createdAt <= :endDate")
     long countByShopIdAndStatusAndDateRange(
@@ -99,10 +89,90 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
-    
-    /**
-     * Find orders pending delivery confirmation (for seller dashboard)
-     */
+
+    long countByShopId(Long shopId);
+
+    long countByShopIdAndCreatedAtAfter(Long shopId, LocalDateTime start);
+
+    @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.shopId = :shopId " +
+           "AND o.createdAt >= :start AND o.createdAt < :end")
+    long countByShopIdAndCreatedAtBetween(
+            @Param("shopId") Long shopId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM OrderEntity o " +
+           "WHERE o.shopId = :shopId AND o.status IN :statuses")
+    Long sumTotalAmountByShopIdAndStatusIn(
+            @Param("shopId") Long shopId,
+            @Param("statuses") List<String> statuses
+    );
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM OrderEntity o " +
+           "WHERE o.shopId = :shopId AND o.status IN :statuses AND o.createdAt >= :start")
+    Long sumTotalAmountByShopIdAndStatusInAndCreatedAtAfter(
+            @Param("shopId") Long shopId,
+            @Param("statuses") List<String> statuses,
+            @Param("start") LocalDateTime start
+    );
+
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM OrderEntity o " +
+           "WHERE o.shopId = :shopId AND o.status IN :statuses " +
+           "AND o.createdAt >= :start AND o.createdAt < :end")
+    Long sumTotalAmountByShopIdAndStatusInAndCreatedAtBetween(
+            @Param("shopId") Long shopId,
+            @Param("statuses") List<String> statuses,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    @Query("SELECT COUNT(DISTINCT o.userId) FROM OrderEntity o WHERE o.shopId = :shopId")
+    long countDistinctCustomersByShopId(@Param("shopId") Long shopId);
+
+    @Query("SELECT COUNT(DISTINCT o.userId) FROM OrderEntity o " +
+           "WHERE o.shopId = :shopId AND o.createdAt >= :start")
+    long countDistinctCustomersByShopIdAndCreatedAtAfter(
+            @Param("shopId") Long shopId,
+            @Param("start") LocalDateTime start
+    );
+
+    Page<OrderEntity> findByShopIdAndUserId(Long shopId, Long userId, Pageable pageable);
+
+    @Query(value = """
+            SELECT o.userId, COUNT(o.id),
+                   COALESCE(SUM(CASE WHEN o.status IN :completedStatuses THEN o.totalAmount ELSE 0 END), 0L),
+                   MAX(o.createdAt)
+            FROM OrderEntity o
+            WHERE o.shopId = :shopId
+            GROUP BY o.userId
+            ORDER BY SUM(CASE WHEN o.status IN :completedStatuses THEN o.totalAmount ELSE 0 END) DESC
+            """,
+            countQuery = "SELECT COUNT(DISTINCT o.userId) FROM OrderEntity o WHERE o.shopId = :shopId")
+    Page<Object[]> aggregateCustomersByShop(
+            @Param("shopId") Long shopId,
+            @Param("completedStatuses") List<String> completedStatuses,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT COUNT(*) FROM (
+                SELECT user_id FROM orders WHERE shop_id = :shopId GROUP BY user_id HAVING COUNT(*) > 1
+            ) returning_customers
+            """, nativeQuery = true)
+    long countReturningCustomersByShopId(@Param("shopId") Long shopId);
+
+    @Query("SELECT o.userId, COUNT(o.id), " +
+           "COALESCE(SUM(CASE WHEN o.status IN :completedStatuses THEN o.totalAmount ELSE 0 END), 0L), " +
+           "MIN(o.createdAt), MAX(o.createdAt) " +
+           "FROM OrderEntity o WHERE o.shopId = :shopId AND o.userId = :userId " +
+           "GROUP BY o.userId")
+    List<Object[]> aggregateCustomerByShopAndUserId(
+            @Param("shopId") Long shopId,
+            @Param("userId") Long userId,
+            @Param("completedStatuses") List<String> completedStatuses
+    );
+   
     @Query("SELECT o FROM OrderEntity o WHERE o.shopId = :shopId AND o.status = :status " +
            "AND o.buyerConfirmed = false ORDER BY o.deliveredAt ASC")
     List<OrderEntity> findPendingConfirmationOrders(

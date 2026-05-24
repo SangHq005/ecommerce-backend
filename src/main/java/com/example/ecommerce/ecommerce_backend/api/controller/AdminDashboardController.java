@@ -11,7 +11,7 @@ import com.example.ecommerce.ecommerce_backend.api.dto.admin.SalesAnalyticsRespo
 import com.example.ecommerce.ecommerce_backend.api.dto.admin.UserAnalyticsResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ApiResponse;
 import com.example.ecommerce.ecommerce_backend.api.response.ResponseHelper;
-import com.example.ecommerce.ecommerce_backend.application.service.AdminDashboardService;
+import com.example.ecommerce.ecommerce_backend.application.service.admin.AdminDashboardService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

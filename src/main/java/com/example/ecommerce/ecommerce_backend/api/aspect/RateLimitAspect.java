@@ -18,7 +18,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.example.ecommerce.ecommerce_backend.api.annotation.RateLimit;
-import com.example.ecommerce.ecommerce_backend.application.service.RateLimitService;
+import com.example.ecommerce.ecommerce_backend.application.service.common.RateLimitService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

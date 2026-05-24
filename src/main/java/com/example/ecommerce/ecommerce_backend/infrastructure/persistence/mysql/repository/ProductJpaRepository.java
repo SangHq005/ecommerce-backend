@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.ProductEntity;
 
@@ -23,6 +24,14 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, Long>
     long countByStatus(String status);
     long countByCategoryId(Long categoryId);
     long countByShopIdAndStatus(Long shopId, String status);
+    long countByShopIdAndSellerUserId(Long shopId, Long sellerUserId);
+
+    @Query("SELECT p.categoryId, COUNT(p) FROM ProductEntity p GROUP BY p.categoryId")
+    List<Object[]> countProductsByCategory();
+
+    Page<ProductEntity> findBySellerUserIdOrderByIdDesc(Long sellerUserId, Pageable pageable);
+
+    Page<ProductEntity> findBySellerUserIdAndStatusOrderByIdDesc(Long sellerUserId, String status, Pageable pageable);
     
     // Admin search methods
     Page<ProductEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
@@ -35,6 +44,7 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, Long>
     @org.springframework.data.jpa.repository.Query("UPDATE ProductEntity p SET p.soldCount = p.soldCount + :quantity WHERE p.id = :productId")
     void incrementSoldCount(@org.springframework.data.repository.query.Param("productId") Long productId, @org.springframework.data.repository.query.Param("quantity") int quantity);
 
-    // NEW: For inventory management
+
     List<ProductEntity> findByShopIdAndStatus(Long shopId, String status);
+    List<ProductEntity> findByMainImageUrlStartingWith(String prefix);
 }

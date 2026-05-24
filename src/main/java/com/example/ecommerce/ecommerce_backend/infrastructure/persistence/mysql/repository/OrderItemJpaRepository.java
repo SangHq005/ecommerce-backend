@@ -1,26 +1,23 @@
 package com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.repository;
 
-import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderItemEntity;
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderItemEntity;
 
 public interface OrderItemJpaRepository extends JpaRepository<OrderItemEntity, Long> {
     List<OrderItemEntity> findByOrderId(Long orderId);
     List<OrderItemEntity> findByProductId(Long productId);
 
-    /**
-     * Batch fetch item counts for multiple orders (fixes N+1)
-     */
+
     @Query("SELECT oi.orderId, COUNT(oi) FROM OrderItemEntity oi WHERE oi.orderId IN :orderIds GROUP BY oi.orderId")
     List<Object[]> countItemsByOrderIds(@Param("orderIds") List<Long> orderIds);
 
-    /**
-     * Batch fetch items for multiple orders (fixes N+1)
-     */
+
     @Query("SELECT oi FROM OrderItemEntity oi WHERE oi.orderId IN :orderIds")
     List<OrderItemEntity> findByOrderIdIn(@Param("orderIds") List<Long> orderIds);
 
@@ -55,4 +52,24 @@ public interface OrderItemJpaRepository extends JpaRepository<OrderItemEntity, L
             "group by p.categoryId " +
             "order by sum(oi.totalPrice) desc")
     List<Object[]> aggregateCategorySalesByStatus(@Param("statuses") List<String> statuses);
+
+    @Query("SELECT oi.productId, SUM(oi.quantity), SUM(oi.totalPrice) " +
+           "FROM OrderItemEntity oi JOIN OrderEntity o ON o.id = oi.orderId " +
+           "WHERE o.shopId = :shopId AND o.status IN :statuses " +
+           "GROUP BY oi.productId ORDER BY SUM(oi.totalPrice) DESC")
+    List<Object[]> aggregateProductSalesByShopOrderByRevenue(
+            @Param("shopId") Long shopId,
+            @Param("statuses") List<String> statuses,
+            Pageable pageable
+    );
+
+    @Query("SELECT oi.productId, SUM(oi.quantity), SUM(oi.totalPrice) " +
+           "FROM OrderItemEntity oi JOIN OrderEntity o ON o.id = oi.orderId " +
+           "WHERE o.shopId = :shopId AND o.status IN :statuses " +
+           "GROUP BY oi.productId ORDER BY SUM(oi.quantity) DESC")
+    List<Object[]> aggregateProductSalesByShopOrderByQuantity(
+            @Param("shopId") Long shopId,
+            @Param("statuses") List<String> statuses,
+            Pageable pageable
+    );
 }

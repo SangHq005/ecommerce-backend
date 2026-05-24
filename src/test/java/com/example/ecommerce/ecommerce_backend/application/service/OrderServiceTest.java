@@ -3,6 +3,10 @@ package com.example.ecommerce.ecommerce_backend.application.service;
 import com.example.ecommerce.ecommerce_backend.api.dto.order.CheckoutRequest;
 import com.example.ecommerce.ecommerce_backend.api.dto.order.OrderResponse;
 import com.example.ecommerce.ecommerce_backend.api.exception.ApiException;
+import com.example.ecommerce.ecommerce_backend.application.service.common.IdempotencyService;
+import com.example.ecommerce.ecommerce_backend.application.service.coupon.CouponService;
+import com.example.ecommerce.ecommerce_backend.application.service.inventory.ReservationService;
+import com.example.ecommerce.ecommerce_backend.application.service.order.OrderService;
 import com.example.ecommerce.ecommerce_backend.domain.order.OrderStatus;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderEntity;
 import com.example.ecommerce.ecommerce_backend.infrastructure.persistence.mysql.entity.OrderItemEntity;
@@ -52,6 +56,7 @@ class OrderServiceTest {
     @Mock private CouponService couponService;
     @Mock private ObjectMapper om;
     @Mock private com.example.ecommerce.ecommerce_backend.infrastructure.config.OrderProperties orderProperties;
+    @Mock private com.example.ecommerce.ecommerce_backend.application.service.order.OrderStatusHistoryService orderHistoryService;
     @Spy private OrderDomainMapper orderMapper = new OrderDomainMapper();
 
     @InjectMocks
@@ -115,13 +120,13 @@ class OrderServiceTest {
         assertEquals(1, responses.size());
         OrderResponse resp = responses.get(0);
         assertEquals("VND", resp.currency());
-        assertEquals(OrderStatus.PAYMENT_PENDING.name(), resp.status());
+        assertEquals(OrderStatus.PROCESSING.name(), resp.status());
 
         // Verify batch calls were used
         verify(skuRepo).findAllById(anyList());
         verify(productRepo).findAllById(anyList());
         verify(skuRepo, never()).findById(anyLong()); // Ensure Loop N+1 is gone
-        
+
         // Verify Order Saved
         ArgumentCaptor<OrderEntity> orderCaptor = ArgumentCaptor.forClass(OrderEntity.class);
         verify(orderRepo, times(1)).save(orderCaptor.capture());
@@ -131,7 +136,7 @@ class OrderServiceTest {
 
         // Verify Reservation
         verify(reservationService).reserve(anyString(), eq(skuId), eq(2));
-        
+
         // Verify Idempotency Complete
         verify(idempotencyService).complete(eq("order.checkout"), eq(idemKey), eq(200), anyString());
     }
@@ -162,7 +167,7 @@ class OrderServiceTest {
         when(addressRepo.existsByIdAndUserId(addressId, userId)).thenReturn(false);
 
         // Act & Assert
-        ApiException ex = assertThrows(ApiException.class, 
+        ApiException ex = assertThrows(ApiException.class,
             () -> orderService.checkout(userId, idemKey, req));
         assertEquals(404, ex.getStatus());
     }
@@ -179,7 +184,7 @@ class OrderServiceTest {
         when(idempotencyService.begin(any(), any(), any(), any())).thenReturn(null);
 
         // Act & Assert
-        ApiException ex = assertThrows(ApiException.class, 
+        ApiException ex = assertThrows(ApiException.class,
             () -> orderService.checkout(userId, idemKey, req));
         assertEquals(400, ex.getStatus());
     }
@@ -198,7 +203,7 @@ class OrderServiceTest {
         when(skuRepo.findAllById(List.of(999L))).thenReturn(List.of()); // SKU not found
 
         // Act & Assert
-        ApiException ex = assertThrows(ApiException.class, 
+        ApiException ex = assertThrows(ApiException.class,
             () -> orderService.checkout(userId, idemKey, req));
         assertEquals(400, ex.getStatus());
     }
@@ -234,7 +239,7 @@ class OrderServiceTest {
         when(productRepo.findAllById(List.of(productId))).thenReturn(List.of(product));
 
         // Act & Assert
-        ApiException ex = assertThrows(ApiException.class, 
+        ApiException ex = assertThrows(ApiException.class,
             () -> orderService.checkout(userId, idemKey, req));
         assertEquals(400, ex.getStatus());
         assertTrue(ex.getMessage().contains("does not belong"));
@@ -347,7 +352,7 @@ class OrderServiceTest {
             when(orderRepo.findByOrderCode(orderCode)).thenReturn(Optional.empty());
 
             // Act & Assert
-            ApiException ex = assertThrows(ApiException.class, 
+            ApiException ex = assertThrows(ApiException.class,
                 () -> orderService.get(userId, orderCode));
             assertEquals(404, ex.getStatus());
         }
@@ -367,7 +372,7 @@ class OrderServiceTest {
             when(orderRepo.findByOrderCode(orderCode)).thenReturn(Optional.of(order));
 
             // Act & Assert
-            ApiException ex = assertThrows(ApiException.class, 
+            ApiException ex = assertThrows(ApiException.class,
                 () -> orderService.get(userId, orderCode));
             assertEquals(404, ex.getStatus());
         }
@@ -411,7 +416,7 @@ class OrderServiceTest {
             when(orderRepo.findByOrderCode(orderCode)).thenReturn(Optional.empty());
 
             // Act & Assert
-            ApiException ex = assertThrows(ApiException.class, 
+            ApiException ex = assertThrows(ApiException.class,
                 () -> orderService.cancel(userId, orderCode));
             assertEquals(404, ex.getStatus());
         }

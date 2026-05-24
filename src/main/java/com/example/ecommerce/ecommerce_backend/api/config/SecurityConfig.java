@@ -35,7 +35,8 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(
             HttpSecurity http,
             JwtAuthFilter jwtAuthFilter,
-            OAuth2SuccessHandler oAuth2SuccessHandler
+            OAuth2SuccessHandler oAuth2SuccessHandler,
+            com.example.ecommerce.ecommerce_backend.api.security.OAuth2FailureHandler oAuth2FailureHandler
     ) throws Exception {
 
         // CSRF disabled because we're using stateless JWT authentication
@@ -84,7 +85,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/payment/*/callback", "/api/v1/payment/vnpay/callback").permitAll()
 
                 // Public endpoints - Static files
-                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/uploads/**", "/files/**").permitAll()
 
                 // Debug endpoints - only available in dev profile
                 .requestMatchers(HttpMethod.GET, "/api/v1/_debug/**").access((authentication, ctx) -> {
@@ -100,7 +101,10 @@ public class SecurityConfig {
         );
 
         // OAuth2 login configuration
-        http.oauth2Login(o -> o.successHandler(oAuth2SuccessHandler));
+        http.oauth2Login(o -> o
+                .successHandler(oAuth2SuccessHandler)
+                .failureHandler(oAuth2FailureHandler)
+        );
 
         // Add JWT authentication filter
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
